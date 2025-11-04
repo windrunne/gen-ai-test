@@ -1,0 +1,28 @@
+Story,Task,Estimate min (hr),Estimate max (hr),Actual,Comment
+Project Setup,Initialize git repo and project structure,0.25,0.5,,"Create repo, directory structure, and initial config files"
+Project Setup,Create time estimates CSV,0.1,0.2,,Document initial estimates
+Backend Setup,Set up FastAPI project with dependencies,0.5,1,,"Requirements.txt, project structure, CORS setup"
+Backend Setup,Create API endpoints structure,0.5,1,,"Routes for experiments, responses, metrics"
+LLM Integration,Integrate OpenAI API with LangChain,1,2,,"Setup API client, handle authentication, error handling"
+LLM Integration,Implement parameter grid generation,0.5,1,,"Generate combinations of temperature, top_p, etc."
+LLM Integration,Implement batch response generation,1,1.5,,Generate multiple responses with different params
+Quality Metrics,Design metric algorithms (coherence  completeness),1.5,2.5,,Research and implement custom metrics
+Quality Metrics,Implement metric calculation functions,1,2,,"Code metrics: length, structure, keyword coverage, etc."
+Data Persistence,Set up database schema (SQLite/PostgreSQL),0.5,1,,"Models for experiments, responses, metrics"
+Data Persistence,Implement CRUD operations,0.5,1,,"Save/load experiments, responses"
+Frontend Setup,Set up React project with Tailwind CSS,0.5,1,,"Create React app, configure Tailwind, project structure"
+Frontend Setup,Create core UI components,1,2,,"Layout, cards, buttons, inputs with Tailwind"
+Frontend Core,Build parameter input interface,1,1.5,,"Form for prompt, temperature range, top_p range"
+Frontend Core,Implement response generation UI,1,1.5,,"Loading states, progress indicators, response display"
+Visualization,Build metrics visualization dashboard,1.5,2.5,,"Charts, graphs, comparison views"
+Visualization,Implement response comparison interface,1,2,,"Side-by-side comparison, highlighting differences"
+Export,Implement export functionality (CSV/JSON),0.5,1,,Export experiments with all data
+UI/UX Polish,Responsive design and mobile optimization,1,1.5,,"Mobile-first approach, breakpoints"
+UI/UX Polish,Add animations and transitions,0.5,1,,"Smooth interactions, loading states"
+UI/UX Polish,Accessibility improvements,0.5,1,,"ARIA labels, keyboard navigation, contrast"
+Error Handling,Add comprehensive error handling,0.5,1,,"API errors, network failures, validation"
+Testing & Polish,Integration testing and bug fixes,1,2,,"End-to-end testing, fix issues"
+Deployment,Set up deployment configuration,0.5,1,,"Vercel/Railway config, environment variables"
+Deployment,Deploy and test live application,0.5,1,,"Deploy, verify functionality"
+Documentation,Write README and architecture docs,1,1.5,,"Setup instructions, tech stack, architecture"
+Documentation,Create demo video script and recording,1,2,,5-10 min video with narration
