@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Response } from '../api/experiments'
-import { Compare, ChevronLeft, ChevronRight } from 'lucide-react'
+import { GitCompare, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ComparisonViewProps {
   responses: Response[]
@@ -42,7 +42,7 @@ export default function ComparisonView({ responses }: ComparisonViewProps) {
           Previous
         </button>
         <div className="flex items-center space-x-2">
-          <Compare className="h-5 w-5 text-primary-600" />
+          <GitCompare className="h-5 w-5 text-primary-600" />
           <span className="text-sm text-gray-600">
             Comparing {selectedIndices[0] + 1} and {selectedIndices[1] + 1} of{' '}
             {responses.length}
