@@ -5,6 +5,9 @@ import ExperimentDetail from './pages/ExperimentDetail'
 import ExperimentsList from './pages/ExperimentsList'
 
 function App() {
+  // Debug: Check if component is rendering
+  console.log('App component rendering...')
+  
   return (
     <Layout>
       <Routes>
