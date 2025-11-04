@@ -4,7 +4,6 @@ LLM Service - Handles OpenAI API calls using LangChain
 import os
 from typing import Dict, Optional
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
 
 from app.core.config import settings
 
@@ -43,19 +42,20 @@ class LLMService:
         try:
             # Initialize ChatOpenAI with parameters
             llm = ChatOpenAI(
-                model_name=self.model_name,
+                model=self.model_name,
                 temperature=temperature,
                 top_p=top_p,
                 max_tokens=max_tokens,
                 openai_api_key=self.api_key
             )
             
-            # Generate response
+            # Generate response (LangChain expects a list of messages)
+            from langchain.schema import HumanMessage
             messages = [HumanMessage(content=prompt)]
             response = await llm.ainvoke(messages)
             
             return {
-                "text": response.content,
+                "text": response.content if hasattr(response, 'content') else str(response),
                 "finish_reason": "stop"  # LangChain doesn't expose this directly
             }
             
