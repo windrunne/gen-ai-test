@@ -40,25 +40,39 @@ class LLMService:
             Dictionary with 'text' and 'finish_reason'
         """
         try:
-            # Initialize ChatOpenAI with parameters
+            # Import here to avoid circular imports
+            from langchain_core.messages import HumanMessage
+            
+            # Initialize ChatOpenAI with parameters (create new instance each time)
             llm = ChatOpenAI(
                 model=self.model_name,
-                temperature=temperature,
-                top_p=top_p,
-                max_tokens=max_tokens,
-                openai_api_key=self.api_key
+                temperature=float(temperature),
+                top_p=float(top_p),
+                max_tokens=int(max_tokens),
+                openai_api_key=self.api_key,
+                timeout=60.0
             )
             
             # Generate response (LangChain expects a list of messages)
-            from langchain_core.messages import HumanMessage
-            messages = [HumanMessage(content=prompt)]
+            messages = [HumanMessage(content=str(prompt))]
             response = await llm.ainvoke(messages)
             
+            # Extract content safely
+            content = ""
+            if hasattr(response, 'content'):
+                content = response.content
+            elif isinstance(response, str):
+                content = response
+            else:
+                content = str(response)
+            
             return {
-                "text": response.content if hasattr(response, 'content') else str(response),
+                "text": content,
                 "finish_reason": "stop"  # LangChain doesn't expose this directly
             }
             
+        except RecursionError as e:
+            raise Exception(f"Recursion error in LLM call: {str(e)}. This may be a LangChain version compatibility issue.")
         except Exception as e:
             # Handle API errors
             error_msg = str(e)
@@ -66,5 +80,7 @@ class LLMService:
                 raise Exception("Rate limit exceeded. Please try again later.")
             elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
                 raise Exception("Invalid API key. Please check your OpenAI API key.")
+            elif "recursion" in error_msg.lower():
+                raise Exception(f"Recursion error: {error_msg}. Try updating LangChain or using OpenAI API directly.")
             else:
                 raise Exception(f"LLM API error: {error_msg}")

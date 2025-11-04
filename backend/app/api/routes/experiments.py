@@ -30,6 +30,16 @@ class ExperimentResponse(BaseModel):
     
     class Config:
         from_attributes = True
+    
+    @classmethod
+    def from_orm(cls, obj):
+        """Convert ORM object to response model"""
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            prompt=obj.prompt,
+            created_at=obj.created_at.isoformat() if obj.created_at else ""
+        )
 
 
 class ExperimentDetail(ExperimentResponse):
@@ -53,8 +63,12 @@ async def create_experiment(
         db.refresh(experiment)
         
         # Generate responses with different parameter combinations
-        llm_service = LLMService()
-        metrics_service = MetricsService()
+        try:
+            llm_service = LLMService()
+            metrics_service = MetricsService()
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Failed to initialize services: {str(e)}")
         
         # Generate parameter combinations
         import itertools
@@ -102,10 +116,18 @@ async def create_experiment(
                 
             except Exception as e:
                 # Log error but continue with other combinations
+                import traceback
                 print(f"Error generating response for temp={temp}, top_p={top_p}: {str(e)}")
+                traceback.print_exc()
                 continue
         
-        return experiment
+        # Return experiment with proper datetime serialization
+        return ExperimentResponse(
+            id=experiment.id,
+            name=experiment.name,
+            prompt=experiment.prompt,
+            created_at=experiment.created_at.isoformat() if experiment.created_at else ""
+        )
         
     except Exception as e:
         db.rollback()
