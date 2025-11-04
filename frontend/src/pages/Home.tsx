@@ -219,6 +219,7 @@ export default function Home() {
             type="submit"
             disabled={createExperiment.isPending}
             className="btn-primary w-full py-3 text-lg"
+            aria-label="Start experiment and generate responses"
           >
             {createExperiment.isPending ? (
               <>

@@ -18,7 +18,10 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <FlaskConical className="h-8 w-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">LLM Lab</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+              <span className="sr-only">LLM Lab</span>
+              LLM Lab
+            </h1>
             </div>
             <nav className="flex space-x-4">
               <Link
