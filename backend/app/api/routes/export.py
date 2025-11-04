@@ -97,7 +97,7 @@ async def export_experiment_json(
         metrics_dict = {
             m.name: {
                 "value": m.value,
-                "metadata": m.metadata
+                "metadata": m.metadata_json
             }
             for m in metrics
         }

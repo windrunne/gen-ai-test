@@ -56,8 +56,8 @@ class Metric(Base):
     name = Column(String(100), nullable=False)
     value = Column(Float, nullable=False)
     
-    # Optional metadata
-    metadata = Column(JSON, nullable=True)
+    # Optional metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
+    metadata_json = Column(JSON, nullable=True)
     
     # Timestamp
     created_at = Column(DateTime(timezone=True), server_default=func.now())

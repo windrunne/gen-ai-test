@@ -94,7 +94,7 @@ async def create_experiment(
                         response_id=response.id,
                         name=metric_name,
                         value=metric_value.get("value", 0.0),
-                        metadata=metric_value.get("metadata")
+                        metadata_json=metric_value.get("metadata")
                     )
                     db.add(metric)
                 

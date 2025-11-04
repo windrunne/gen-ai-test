@@ -42,7 +42,7 @@ async def get_experiment_responses(
             {
                 "name": m.name,
                 "value": m.value,
-                "metadata": m.metadata
+                "metadata": m.metadata_json
             }
             for m in metrics
         ]
@@ -70,7 +70,7 @@ async def get_response(
         {
             "name": m.name,
             "value": m.value,
-            "metadata": m.metadata
+            "metadata": m.metadata_json
         }
         for m in metrics
     ]
