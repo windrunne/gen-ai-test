@@ -50,7 +50,7 @@ class LLMService:
             )
             
             # Generate response (LangChain expects a list of messages)
-            from langchain.schema import HumanMessage
+            from langchain_core.messages import HumanMessage
             messages = [HumanMessage(content=prompt)]
             response = await llm.ainvoke(messages)
             
