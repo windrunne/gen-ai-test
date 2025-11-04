@@ -230,8 +230,14 @@ class MetricsService:
     def calculate_overall_score(self, text: str) -> Dict:
         """
         Calculate overall quality score (weighted average of all metrics)
+        Note: This calculates metrics directly to avoid circular recursion
         """
-        all_metrics = self.calculate_all_metrics(text)
+        # Calculate individual metrics directly (don't call calculate_all_metrics)
+        length_score = self.calculate_length_score(text)["value"]
+        coherence_score = self.calculate_coherence_score(text)["value"]
+        completeness_score = self.calculate_completeness_score(text)["value"]
+        structure_score = self.calculate_structure_score(text)["value"]
+        readability_score = self.calculate_readability_score(text)["value"]
         
         # Weights for different metrics
         weights = {
@@ -242,17 +248,24 @@ class MetricsService:
             "readability_score": 0.25
         }
         
-        overall = sum(
-            all_metrics[metric]["value"] * weight
-            for metric, weight in weights.items()
+        # Calculate weighted average
+        overall = (
+            length_score * weights["length_score"] +
+            coherence_score * weights["coherence_score"] +
+            completeness_score * weights["completeness_score"] +
+            structure_score * weights["structure_score"] +
+            readability_score * weights["readability_score"]
         )
         
         return {
             "value": round(overall, 3),
             "metadata": {
                 "component_scores": {
-                    metric: all_metrics[metric]["value"]
-                    for metric in weights.keys()
+                    "length_score": length_score,
+                    "coherence_score": coherence_score,
+                    "completeness_score": completeness_score,
+                    "structure_score": structure_score,
+                    "readability_score": readability_score
                 }
             }
         }
