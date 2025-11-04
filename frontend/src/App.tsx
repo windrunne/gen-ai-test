@@ -1,0 +1,19 @@
+import { Routes, Route } from 'react-router-dom'
+import Layout from './components/Layout'
+import Home from './pages/Home'
+import ExperimentDetail from './pages/ExperimentDetail'
+import ExperimentsList from './pages/ExperimentsList'
+
+function App() {
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/experiments" element={<ExperimentsList />} />
+        <Route path="/experiments/:id" element={<ExperimentDetail />} />
+      </Routes>
+    </Layout>
+  )
+}
+
+export default App
