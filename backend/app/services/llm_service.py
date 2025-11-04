@@ -1,9 +1,14 @@
 """
-LLM Service - Handles OpenAI API calls using LangChain
+LLM Service - Handles OpenAI API calls using OpenAI SDK directly
 """
 import os
 from typing import Dict, Optional
-from langchain_openai import ChatOpenAI
+try:
+    from openai import AsyncOpenAI
+    USE_OPENAI_SDK = True
+except ImportError:
+    USE_OPENAI_SDK = False
+    from langchain_openai import ChatOpenAI
 
 from app.core.config import settings
 
@@ -40,39 +45,55 @@ class LLMService:
             Dictionary with 'text' and 'finish_reason'
         """
         try:
-            # Import here to avoid circular imports
-            from langchain_core.messages import HumanMessage
-            
-            # Initialize ChatOpenAI with parameters (create new instance each time)
-            llm = ChatOpenAI(
-                model=self.model_name,
-                temperature=float(temperature),
-                top_p=float(top_p),
-                max_tokens=int(max_tokens),
-                openai_api_key=self.api_key,
-                timeout=60.0
-            )
-            
-            # Generate response (LangChain expects a list of messages)
-            messages = [HumanMessage(content=str(prompt))]
-            response = await llm.ainvoke(messages)
-            
-            # Extract content safely
-            content = ""
-            if hasattr(response, 'content'):
-                content = response.content
-            elif isinstance(response, str):
-                content = response
+            # Use OpenAI SDK directly if available (more reliable)
+            if USE_OPENAI_SDK:
+                client = AsyncOpenAI(api_key=self.api_key)
+                response = await client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[{"role": "user", "content": str(prompt)}],
+                    temperature=float(temperature),
+                    top_p=float(top_p),
+                    max_tokens=int(max_tokens)
+                )
+                
+                content = response.choices[0].message.content or ""
+                finish_reason = response.choices[0].finish_reason or "stop"
+                
+                return {
+                    "text": content,
+                    "finish_reason": finish_reason
+                }
             else:
-                content = str(response)
-            
-            return {
-                "text": content,
-                "finish_reason": "stop"  # LangChain doesn't expose this directly
-            }
+                # Fallback to LangChain
+                from langchain_core.messages import HumanMessage
+                
+                llm = ChatOpenAI(
+                    model=self.model_name,
+                    temperature=float(temperature),
+                    top_p=float(top_p),
+                    max_tokens=int(max_tokens),
+                    openai_api_key=self.api_key,
+                    timeout=60.0
+                )
+                
+                messages = [HumanMessage(content=str(prompt))]
+                response = await llm.ainvoke(messages)
+                
+                content = ""
+                if hasattr(response, 'content'):
+                    content = response.content
+                elif isinstance(response, str):
+                    content = response
+                else:
+                    content = str(response)
+                
+                return {
+                    "text": content,
+                    "finish_reason": "stop"
+                }
             
         except RecursionError as e:
-            raise Exception(f"Recursion error in LLM call: {str(e)}. This may be a LangChain version compatibility issue.")
+            raise Exception(f"Recursion error in LLM call: {str(e)}. Try using OpenAI SDK directly.")
         except Exception as e:
             # Handle API errors
             error_msg = str(e)
@@ -81,6 +102,6 @@ class LLMService:
             elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
                 raise Exception("Invalid API key. Please check your OpenAI API key.")
             elif "recursion" in error_msg.lower():
-                raise Exception(f"Recursion error: {error_msg}. Try updating LangChain or using OpenAI API directly.")
+                raise Exception(f"Recursion error: {error_msg}. Try using OpenAI SDK directly.")
             else:
                 raise Exception(f"LLM API error: {error_msg}")
