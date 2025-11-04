@@ -77,9 +77,14 @@ async def create_experiment(
             experiment_data.top_p_range
         ))
         
+        print(f"[EXPERIMENT {experiment.id}] Starting generation of {len(param_combinations)} responses...")
+        
         # Generate responses for each combination
-        for temp, top_p in param_combinations:
+        success_count = 0
+        for idx, (temp, top_p) in enumerate(param_combinations, 1):
             try:
+                print(f"[EXPERIMENT {experiment.id}] Generating response {idx}/{len(param_combinations)}: temp={temp}, top_p={top_p}")
+                
                 # Generate LLM response
                 llm_response = await llm_service.generate_response(
                     prompt=experiment_data.prompt,
@@ -87,6 +92,8 @@ async def create_experiment(
                     top_p=top_p,
                     max_tokens=experiment_data.max_tokens
                 )
+                
+                print(f"[EXPERIMENT {experiment.id}] LLM response received (length: {len(llm_response['text'])})")
                 
                 # Create response record
                 response = Response(
@@ -101,8 +108,12 @@ async def create_experiment(
                 db.commit()
                 db.refresh(response)
                 
+                print(f"[EXPERIMENT {experiment.id}] Response saved (ID: {response.id}), calculating metrics...")
+                
                 # Calculate and store metrics
                 metrics = metrics_service.calculate_all_metrics(llm_response["text"])
+                print(f"[EXPERIMENT {experiment.id}] Metrics calculated: {list(metrics.keys())}")
+                
                 for metric_name, metric_value in metrics.items():
                     metric = Metric(
                         response_id=response.id,
@@ -113,13 +124,17 @@ async def create_experiment(
                     db.add(metric)
                 
                 db.commit()
+                success_count += 1
+                print(f"[EXPERIMENT {experiment.id}] Response {idx} completed successfully")
                 
             except Exception as e:
                 # Log error but continue with other combinations
                 import traceback
-                print(f"Error generating response for temp={temp}, top_p={top_p}: {str(e)}")
+                print(f"[EXPERIMENT {experiment.id}] ERROR generating response {idx} (temp={temp}, top_p={top_p}): {str(e)}")
                 traceback.print_exc()
                 continue
+        
+        print(f"[EXPERIMENT {experiment.id}] Generation complete: {success_count}/{len(param_combinations)} successful")
         
         # Return experiment with proper datetime serialization
         return ExperimentResponse(
@@ -142,7 +157,15 @@ async def list_experiments(
 ):
     """List all experiments"""
     experiments = db.query(Experiment).offset(skip).limit(limit).all()
-    return experiments
+    return [
+        {
+            "id": exp.id,
+            "name": exp.name,
+            "prompt": exp.prompt,
+            "created_at": exp.created_at.isoformat() if exp.created_at else ""
+        }
+        for exp in experiments
+    ]
 
 
 @router.get("/{experiment_id}", response_model=ExperimentDetail)
@@ -158,7 +181,10 @@ async def get_experiment(
     response_count = db.query(Response).filter(Response.experiment_id == experiment_id).count()
     
     return {
-        **experiment.__dict__,
+        "id": experiment.id,
+        "name": experiment.name,
+        "prompt": experiment.prompt,
+        "created_at": experiment.created_at.isoformat() if experiment.created_at else "",
         "response_count": response_count
     }
 

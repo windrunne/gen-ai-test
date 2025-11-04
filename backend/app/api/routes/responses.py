@@ -48,7 +48,14 @@ async def get_experiment_responses(
         ]
         
         result.append({
-            **response.__dict__,
+            "id": response.id,
+            "experiment_id": response.experiment_id,
+            "temperature": response.temperature,
+            "top_p": response.top_p,
+            "max_tokens": response.max_tokens,
+            "text": response.text,
+            "finish_reason": response.finish_reason,
+            "created_at": response.created_at.isoformat() if response.created_at else "",
             "metrics": metrics_data
         })
     
@@ -76,6 +83,13 @@ async def get_response(
     ]
     
     return {
-        **response.__dict__,
+        "id": response.id,
+        "experiment_id": response.experiment_id,
+        "temperature": response.temperature,
+        "top_p": response.top_p,
+        "max_tokens": response.max_tokens,
+        "text": response.text,
+        "finish_reason": response.finish_reason,
+        "created_at": response.created_at.isoformat() if response.created_at else "",
         "metrics": metrics_data
     }
