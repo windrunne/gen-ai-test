@@ -1,14 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
-
-interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title: string
-  children: React.ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  showCloseButton?: boolean
-}
+import type { ModalProps } from './types'
+import { UI_CONFIG } from '../constants'
 
 export default function Modal({
   isOpen,
@@ -67,18 +60,13 @@ export default function Modal({
   }, [isOpen])
 
   // Size classes
-  const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-4xl',
-  }
+  const sizeClasses = UI_CONFIG.MODAL_SIZES
 
   if (!isOpen) return null
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="!mt-0 fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"

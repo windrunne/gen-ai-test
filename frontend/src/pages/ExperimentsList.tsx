@@ -1,13 +1,22 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { TestTube, Clock, Loader2 } from 'lucide-react'
-import { experimentsApi } from '../api/experiments'
+/**
+ * Experiments List Page - View all experiments
+ */
+import { useNavigate } from 'react-router-dom'
+import { Loader2, Trash2, FileText } from 'lucide-react'
+import { useExperiments, useDeleteExperiment } from '../hooks'
+import { formatDate } from '../utils'
 
 export default function ExperimentsList() {
-  const { data: experiments, isLoading, error } = useQuery({
-    queryKey: ['experiments'],
-    queryFn: experimentsApi.list,
-  })
+  const navigate = useNavigate()
+  const { data: experiments, isLoading } = useExperiments()
+  const deleteExperiment = useDeleteExperiment()
+
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (confirm('Are you sure you want to delete this experiment?')) {
+      deleteExperiment.mutate(id)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -17,77 +26,56 @@ export default function ExperimentsList() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="card bg-red-50 border-red-200">
-        <p className="text-red-700">Error loading experiments: {error.message}</p>
-      </div>
-    )
-  }
-
-  if (!experiments || experiments.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <TestTube className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-          No Experiments Yet
-        </h2>
-        <p className="text-gray-600 mb-6">
-          Create your first experiment to get started
-        </p>
-        <Link to="/" className="btn-primary inline-block">
-          Create Experiment
-        </Link>
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
-            Experiments
-          </h1>
-          <p className="text-gray-600">View and manage your LLM experiments</p>
-        </div>
-        <Link 
-          to="/" 
-          className="btn-primary flex items-center shadow-md hover:shadow-lg transition-all hover:scale-105"
+    <div className="max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Experiments</h1>
+        <button
+          onClick={() => navigate('/')}
+          className="btn-primary"
         >
-          <TestTube className="h-4 w-4 mr-2" />
-          New Experiment
-        </Link>
+          + New Experiment
+        </button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {experiments.map((experiment) => (
-          <Link
-            key={experiment.id}
-            to={`/experiments/${experiment.id}`}
-            className="card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 group"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <TestTube className="h-6 w-6 text-white" />
+      {!experiments || experiments.length === 0 ? (
+        <div className="card text-center py-12">
+          <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">No experiments yet</p>
+          <button onClick={() => navigate('/')} className="btn-primary">
+            Create Your First Experiment
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {experiments.map((experiment) => (
+            <div
+              key={experiment.id}
+              onClick={() => navigate(`/experiments/${experiment.id}`)}
+              className="card cursor-pointer hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h2 className="text-xl font-semibold text-gray-900 flex-1">
+                  {experiment.name}
+                </h2>
+                <button
+                  onClick={(e) => handleDelete(experiment.id, e)}
+                  className="text-red-500 hover:text-red-700 p-1"
+                  aria-label="Delete experiment"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
               </div>
-              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                #{experiment.id}
-              </span>
+              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                {experiment.prompt}
+              </p>
+              <p className="text-xs text-gray-500">
+                {formatDate(experiment.created_at)}
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
-              {experiment.name}
-            </h3>
-            <p className="text-sm text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-              {experiment.prompt}
-            </p>
-            <div className="flex items-center text-xs text-gray-500 pt-4 border-t border-gray-100">
-              <Clock className="h-4 w-4 mr-1.5 text-primary-600" />
-              <span>{new Date(experiment.created_at).toLocaleDateString()}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

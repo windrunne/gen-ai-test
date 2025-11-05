@@ -1,105 +1,38 @@
+/**
+ * Experiments API client
+ */
 import apiClient from './client'
-
-export interface ExperimentCreate {
-  name: string
-  prompt: string
-  temperature_range: number[]
-  top_p_range: number[]
-  max_tokens?: number
-}
-
-export interface Experiment {
-  id: number
-  name: string
-  prompt: string
-  created_at: string
-}
-
-export interface ExperimentDetail extends Experiment {
-  response_count: number
-}
-
-export interface Response {
-  id: number
-  experiment_id: number
-  temperature: number
-  top_p: number
-  max_tokens: number
-  text: string
-  finish_reason: string | null
-  validation_metadata?: {
-    is_valid: boolean
-    is_corrupted: boolean
-    is_truncated: boolean
-    corruption_score: number
-    warnings: string[]
-  } | null
-  created_at: string
-  metrics: Array<{
-    name: string
-    value: number
-    metadata?: any
-  }>
-}
-
-export interface MetricsSummary {
-  [metricName: string]: {
-    mean: number
-    median: number
-    min: number
-    max: number
-    std_dev: number
-    count: number
-    responses: Array<{
-      response_id: number
-      temperature: number
-      top_p: number
-      value: number
-    }>
-  }
-}
+import type { Experiment, ExperimentCreate, ExperimentDetail } from '../types'
 
 export const experimentsApi = {
+  /**
+   * Create a new experiment
+   */
   create: async (data: ExperimentCreate): Promise<Experiment> => {
-    const response = await apiClient.post('/experiments/', data)
+    const response = await apiClient.post<Experiment>('/experiments/', data)
     return response.data
   },
 
+  /**
+   * List all experiments
+   */
   list: async (): Promise<Experiment[]> => {
-    const response = await apiClient.get('/experiments/')
+    const response = await apiClient.get<Experiment[]>('/experiments/')
     return response.data
   },
 
+  /**
+   * Get experiment by ID
+   */
   get: async (id: number): Promise<ExperimentDetail> => {
-    const response = await apiClient.get(`/experiments/${id}`)
+    const response = await apiClient.get<ExperimentDetail>(`/experiments/${id}`)
     return response.data
   },
 
+  /**
+   * Delete experiment
+   */
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/experiments/${id}`)
-  },
-
-  getResponses: async (experimentId: number): Promise<Response[]> => {
-    const response = await apiClient.get(`/responses/experiment/${experimentId}`)
-    return response.data
-  },
-
-  getMetricsSummary: async (experimentId: number): Promise<MetricsSummary> => {
-    const response = await apiClient.get(`/metrics/experiment/${experimentId}/summary`)
-    return response.data
-  },
-
-  exportCSV: async (experimentId: number): Promise<Blob> => {
-    const response = await apiClient.get(`/export/experiment/${experimentId}/csv`, {
-      responseType: 'blob',
-    })
-    return response.data
-  },
-
-  exportJSON: async (experimentId: number): Promise<Blob> => {
-    const response = await apiClient.get(`/export/experiment/${experimentId}/json`, {
-      responseType: 'blob',
-    })
-    return response.data
   },
 }

@@ -1,34 +1,31 @@
+/**
+ * Home Page - Create new experiments
+ */
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { Sparkles, Loader2 } from 'lucide-react'
-import { experimentsApi, ExperimentCreate } from '../api/experiments'
 import ParameterModal from '../components/ParameterModal'
+import { useCreateExperiment } from '../hooks'
+import type { ExperimentCreate } from '../types'
+import { PARAMETER_CONSTRAINTS } from '../constants'
 
 export default function Home() {
-  const navigate = useNavigate()
   const [formData, setFormData] = useState<ExperimentCreate>({
     name: '',
     prompt: '',
-    temperature_range: [0.5, 1.0, 1.5],
-    top_p_range: [0.8, 0.9, 1.0],
-    max_tokens: 1000,
+    temperature_range: [...PARAMETER_CONSTRAINTS.TEMPERATURE.DEFAULT_VALUES],
+    top_p_range: [...PARAMETER_CONSTRAINTS.TOP_P.DEFAULT_VALUES],
+    max_tokens: PARAMETER_CONSTRAINTS.MAX_TOKENS.DEFAULT,
   })
 
-  const createExperiment = useMutation({
-    mutationFn: experimentsApi.create,
-    onSuccess: (data) => {
-      navigate(`/experiments/${data.id}`)
-    },
-  })
+  const [showTempModal, setShowTempModal] = useState(false)
+  const [showTopPModal, setShowTopPModal] = useState(false)
+
+  const createExperiment = useCreateExperiment()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     createExperiment.mutate(formData)
   }
-
-  const [showTempModal, setShowTempModal] = useState(false)
-  const [showTopPModal, setShowTopPModal] = useState(false)
 
   const addTempValue = (value: number) => {
     setFormData({
@@ -62,19 +59,17 @@ export default function Home() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-12 animate-fade-in">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg shadow-primary-500/30 mb-6">
-          <Sparkles className="h-10 w-10 text-white" />
-        </div>
-        <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-4">
+      <div className="text-center mb-8 animate-fade-in">
+        <Sparkles className="h-16 w-16 text-primary-600 mx-auto mb-4" />
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
           LLM Experimental Console
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Explore how temperature and top_p parameters affect LLM responses through systematic experimentation
+        <p className="text-lg text-gray-600">
+          Explore how temperature and top_p parameters affect LLM responses
         </p>
       </div>
 
-      <div className="card shadow-xl border-0 animate-slide-up">
+      <div className="card animate-slide-up">
         <h2 className="text-2xl font-semibold mb-6">Create New Experiment</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -123,19 +118,20 @@ export default function Home() {
           {/* Temperature Range */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Temperature Values (0.0 - 2.0)
+              Temperature Range
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {formData.temperature_range.map((temp, index) => (
+              {formData.temperature_range.map((value, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-700"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800"
                 >
-                  {temp}
+                  {value}
                   <button
                     type="button"
                     onClick={() => removeTempValue(index)}
                     className="ml-2 text-primary-600 hover:text-primary-800"
+                    aria-label={`Remove temperature ${value}`}
                   >
                     ×
                   </button>
@@ -150,26 +146,28 @@ export default function Home() {
               + Add Temperature Value
             </button>
             <p className="text-xs text-gray-500 mt-1">
-              Higher values = more randomness. Lower values = more focused.
+              Temperature controls randomness. Higher values (0.7-2.0) make output
+              more creative, lower values (0.0-0.7) make it more focused.
             </p>
           </div>
 
           {/* Top P Range */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Top P Values (0.0 - 1.0)
+              Top P Range
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {formData.top_p_range.map((topP, index) => (
+              {formData.top_p_range.map((value, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-700"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
                 >
-                  {topP}
+                  {value}
                   <button
                     type="button"
                     onClick={() => removeTopPValue(index)}
-                    className="ml-2 text-primary-600 hover:text-primary-800"
+                    className="ml-2 text-blue-600 hover:text-blue-800"
+                    aria-label={`Remove top_p ${value}`}
                   >
                     ×
                   </button>
@@ -184,7 +182,9 @@ export default function Home() {
               + Add Top P Value
             </button>
             <p className="text-xs text-gray-500 mt-1">
-              Controls diversity via nucleus sampling.
+              Top P (nucleus sampling) limits token selection to the smallest set
+              whose cumulative probability exceeds the threshold. Lower values focus
+              on more likely tokens.
             </p>
           </div>
 
@@ -199,72 +199,60 @@ export default function Home() {
             <input
               type="number"
               id="max_tokens"
-              min="1"
-              max="4000"
+              min={PARAMETER_CONSTRAINTS.MAX_TOKENS.MIN}
+              max={PARAMETER_CONSTRAINTS.MAX_TOKENS.MAX}
               value={formData.max_tokens}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  max_tokens: parseInt(e.target.value) || 1000,
+                  max_tokens: parseInt(e.target.value) || PARAMETER_CONSTRAINTS.MAX_TOKENS.DEFAULT,
                 })
               }
               className="input-field"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum number of tokens in the response (1-{PARAMETER_CONSTRAINTS.MAX_TOKENS.MAX})
+            </p>
           </div>
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={createExperiment.isPending}
-            className="btn-primary w-full py-3 text-lg"
-            aria-label="Start experiment and generate responses"
-          >
-            {createExperiment.isPending ? (
-              <>
-                <Loader2 className="h-5 w-5 inline-block mr-2 animate-spin" />
-                Generating Responses...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-5 w-5 inline-block mr-2" />
-                Start Experiment
-              </>
-            )}
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={createExperiment.isPending}
+            >
+              {createExperiment.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Experiment'
+              )}
+            </button>
+          </div>
 
           {createExperiment.isError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              Error: {createExperiment.error?.message || 'Failed to create experiment'}
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">
+                Error: {createExperiment.error?.message || 'Failed to create experiment'}
+              </p>
             </div>
           )}
         </form>
-      </div>
 
-      {/* Info Section */}
-      <div className="mt-12 grid md:grid-cols-2 gap-6">
-        <div className="card bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/50 shadow-md">
-          <div className="flex items-center mb-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white text-xl font-bold">T</span>
-            </div>
-            <h3 className="font-semibold text-lg text-gray-900">About Temperature</h3>
-          </div>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            Temperature controls randomness. Lower values (0.0-0.5) produce more
-            deterministic outputs, while higher values (1.0-2.0) increase
-            creativity and variation.
+        {/* Info Section */}
+        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2">About Parameters</h3>
+          <p className="text-sm text-blue-800 mb-2">
+            <strong>Temperature:</strong> Controls the randomness of the output. Higher
+            values produce more diverse and creative responses, while lower values produce
+            more focused and deterministic responses.
           </p>
-        </div>
-        <div className="card bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200/50 shadow-md">
-          <div className="flex items-center mb-3">
-            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white text-xl font-bold">P</span>
-            </div>
-            <h3 className="font-semibold text-lg text-gray-900">About Top P</h3>
-          </div>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            Top P (nucleus sampling) limits the token selection to the smallest
-            set whose cumulative probability exceeds the threshold. Lower values
+          <p className="text-sm text-blue-800">
+            <strong>Top P:</strong> (nucleus sampling) limits the token selection to the
+            smallest set whose cumulative probability exceeds the threshold. Lower values
             focus on more likely tokens.
           </p>
         </div>

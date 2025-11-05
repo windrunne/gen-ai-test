@@ -1,21 +1,19 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Info } from 'lucide-react'
 import { useState } from 'react'
-import { MetricsSummary } from '../api/experiments'
-
-interface MetricsChartProps {
-  metricsSummary: MetricsSummary
-}
+import type { MetricsChartProps } from './types'
+import { formatMetricName } from '../utils'
+import { METRIC_DISPLAY } from '../constants'
 
 export default function MetricsChart({ metricsSummary }: MetricsChartProps) {
   const [showHelp, setShowHelp] = useState(false)
 
   // Prepare data for chart
   const chartData = Object.entries(metricsSummary).map(([name, data]) => ({
-    name: name.replace('_score', '').replace('_', ' ').toUpperCase(),
-    mean: Number((data.mean * 100).toFixed(1)),
-    min: Number((data.min * 100).toFixed(1)),
-    max: Number((data.max * 100).toFixed(1)),
+    name: formatMetricName(name).toUpperCase(),
+    mean: Number((data.mean * METRIC_DISPLAY.PERCENTAGE_MULTIPLIER).toFixed(METRIC_DISPLAY.DECIMAL_PLACES)),
+    min: Number((data.min * METRIC_DISPLAY.PERCENTAGE_MULTIPLIER).toFixed(METRIC_DISPLAY.DECIMAL_PLACES)),
+    max: Number((data.max * METRIC_DISPLAY.PERCENTAGE_MULTIPLIER).toFixed(METRIC_DISPLAY.DECIMAL_PLACES)),
   }))
 
   return (
