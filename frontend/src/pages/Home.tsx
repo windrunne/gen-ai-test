@@ -62,17 +62,19 @@ export default function Home() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-8 animate-fade-in">
-        <Sparkles className="h-16 w-16 text-primary-600 mx-auto mb-4" />
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+      <div className="text-center mb-12 animate-fade-in">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg shadow-primary-500/30 mb-6">
+          <Sparkles className="h-10 w-10 text-white" />
+        </div>
+        <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-4">
           LLM Experimental Console
         </h1>
-        <p className="text-lg text-gray-600">
-          Explore how temperature and top_p parameters affect LLM responses
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Explore how temperature and top_p parameters affect LLM responses through systematic experimentation
         </p>
       </div>
 
-      <div className="card animate-slide-up">
+      <div className="card shadow-xl border-0 animate-slide-up">
         <h2 className="text-2xl font-semibold mb-6">Create New Experiment</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -239,18 +241,28 @@ export default function Home() {
       </div>
 
       {/* Info Section */}
-      <div className="mt-8 grid md:grid-cols-2 gap-4">
-        <div className="card">
-          <h3 className="font-semibold text-lg mb-2">About Temperature</h3>
-          <p className="text-sm text-gray-600">
+      <div className="mt-12 grid md:grid-cols-2 gap-6">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/50 shadow-md">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+              <span className="text-white text-xl font-bold">T</span>
+            </div>
+            <h3 className="font-semibold text-lg text-gray-900">About Temperature</h3>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">
             Temperature controls randomness. Lower values (0.0-0.5) produce more
             deterministic outputs, while higher values (1.0-2.0) increase
             creativity and variation.
           </p>
         </div>
-        <div className="card">
-          <h3 className="font-semibold text-lg mb-2">About Top P</h3>
-          <p className="text-sm text-gray-600">
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200/50 shadow-md">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
+              <span className="text-white text-xl font-bold">P</span>
+            </div>
+            <h3 className="font-semibold text-lg text-gray-900">About Top P</h3>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">
             Top P (nucleus sampling) limits the token selection to the smallest
             set whose cumulative probability exceeds the threshold. Lower values
             focus on more likely tokens.

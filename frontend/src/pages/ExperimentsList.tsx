@@ -44,10 +44,19 @@ export default function ExperimentsList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Experiments</h1>
-        <Link to="/" className="btn-primary">
-          + New Experiment
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+            Experiments
+          </h1>
+          <p className="text-gray-600">View and manage your LLM experiments</p>
+        </div>
+        <Link 
+          to="/" 
+          className="btn-primary flex items-center shadow-md hover:shadow-lg transition-all hover:scale-105"
+        >
+          <TestTube className="h-4 w-4 mr-2" />
+          New Experiment
         </Link>
       </div>
 
@@ -56,23 +65,25 @@ export default function ExperimentsList() {
           <Link
             key={experiment.id}
             to={`/experiments/${experiment.id}`}
-            className="card hover:shadow-lg transition-shadow duration-200"
+            className="card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 group"
           >
             <div className="flex items-start justify-between mb-4">
-              <TestTube className="h-6 w-6 text-primary-600" />
-              <span className="text-xs text-gray-500">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <TestTube className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                 #{experiment.id}
               </span>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
               {experiment.name}
             </h3>
-            <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+            <p className="text-sm text-gray-600 mb-4 line-clamp-3 leading-relaxed">
               {experiment.prompt}
             </p>
-            <div className="flex items-center text-xs text-gray-500">
-              <Clock className="h-4 w-4 mr-1" />
-              {new Date(experiment.created_at).toLocaleDateString()}
+            <div className="flex items-center text-xs text-gray-500 pt-4 border-t border-gray-100">
+              <Clock className="h-4 w-4 mr-1.5 text-primary-600" />
+              <span>{new Date(experiment.created_at).toLocaleDateString()}</span>
             </div>
           </Link>
         ))}
