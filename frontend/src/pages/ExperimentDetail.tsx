@@ -3,11 +3,11 @@
  */
 import { useParams } from 'react-router-dom'
 import { BarChart3 } from 'lucide-react'
-import MetricsChart from '../components/MetricsChart'
-import ComparisonView from '../components/ComparisonView'
-import ExperimentHeader from '../components/ExperimentHeader'
-import ExperimentInfo from '../components/ExperimentInfo'
-import LoadingSpinner from '../components/LoadingSpinner'
+import MetricsChart from '../components/metrics/MetricsChart'
+import ComparisonView from '../components/responses/ComparisonView'
+import ExperimentHeader from '../components/experiments/ExperimentHeader'
+import ExperimentInfo from '../components/experiments/ExperimentInfo'
+import LoadingSpinner from '../components/common/LoadingSpinner'
 import {
   useExperiment,
   useExperimentResponses,

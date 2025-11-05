@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import Modal from './Modal'
-import type { ParameterModalProps } from './types'
-import { PARAMETER_CONSTRAINTS } from '../constants'
-import { validateTemperature, validateTopP } from '../utils'
+import Modal from '../common/Modal'
+import type { ParameterModalProps } from '../types'
+import { PARAMETER_CONSTRAINTS } from '../../constants'
+import { validateTemperature, validateTopP } from '../../utils'
 
 export default function ParameterModal({
   isOpen,

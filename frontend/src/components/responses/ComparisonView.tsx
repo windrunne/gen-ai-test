@@ -3,11 +3,11 @@
  */
 import { useState } from 'react'
 import ResponseModal from './ResponseModal'
-import SortableTableHeader from './SortableTableHeader'
+import SortableTableHeader from '../common/SortableTableHeader'
 import ResponseTableRow from './ResponseTableRow'
-import type { ComparisonViewProps } from './types'
-import type { Response } from '../types'
-import { useSortable } from '../hooks/useSortable'
+import type { ComparisonViewProps } from '../types'
+import type { Response } from '../../types'
+import { useSortable } from '../../hooks/useSortable'
 
 export default function ComparisonView({ responses }: ComparisonViewProps) {
   const [selectedResponse, setSelectedResponse] = useState<Response | null>(null)

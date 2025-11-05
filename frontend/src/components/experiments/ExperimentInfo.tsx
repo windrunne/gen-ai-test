@@ -1,8 +1,8 @@
 /**
  * Experiment Info Component
  */
-import type { ExperimentDetail } from '../types'
-import { formatDate } from '../utils'
+import type { ExperimentDetail } from '../../types'
+import { formatDate } from '../../utils'
 
 interface ExperimentInfoProps {
   experiment: ExperimentDetail

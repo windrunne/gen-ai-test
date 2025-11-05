@@ -1,9 +1,9 @@
 /**
  * Response Modal Component - Displays detailed response information
  */
-import Modal from './Modal'
-import type { ResponseModalProps } from './types'
-import { formatPercentage, hasResponseWarnings, formatMetricName } from '../utils'
+import Modal from '../common/Modal'
+import type { ResponseModalProps } from '../types'
+import { formatPercentage, hasResponseWarnings, formatMetricName } from '../../utils'
 
 export default function ResponseModal({ response, onClose }: ResponseModalProps) {
   if (!response) return null

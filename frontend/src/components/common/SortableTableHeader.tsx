@@ -2,7 +2,7 @@
  * Sortable Table Header Component
  */
 import { ChevronUp, ChevronDown } from 'lucide-react'
-import type { SortDirection } from '../types'
+import type { SortDirection } from '../../types'
 
 interface SortableTableHeaderProps {
   label: string

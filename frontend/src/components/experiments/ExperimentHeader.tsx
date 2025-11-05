@@ -25,11 +25,11 @@ export default function ExperimentHeader({
         Back to Experiments
       </button>
       <div className="flex space-x-2">
-        <button onClick={onExportCSV} className="btn-secondary">
+        <button onClick={onExportCSV} className="btn-secondary flex gap-2 items-center">
           <Download className="h-4 w-4 mr-2" />
           Export CSV
         </button>
-        <button onClick={onExportJSON} className="btn-secondary">
+        <button onClick={onExportJSON} className="btn-secondary flex gap-2 items-center">
           <Download className="h-4 w-4 mr-2" />
           Export JSON
         </button>

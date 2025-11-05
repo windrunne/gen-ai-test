@@ -3,8 +3,8 @@
  */
 import { useNavigate } from 'react-router-dom'
 import { FileText } from 'lucide-react'
-import ExperimentCard from '../components/ExperimentCard'
-import LoadingSpinner from '../components/LoadingSpinner'
+import ExperimentCard from '../components/experiments/ExperimentCard'
+import LoadingSpinner from '../components/common/LoadingSpinner'
 import { useExperiments, useDeleteExperiment } from '../hooks'
 
 export default function ExperimentsList() {

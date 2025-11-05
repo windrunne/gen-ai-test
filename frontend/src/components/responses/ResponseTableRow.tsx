@@ -2,8 +2,8 @@
  * Response Table Row Component
  */
 import { Eye } from 'lucide-react'
-import type { Response } from '../types'
-import { formatPercentage, hasResponseWarnings } from '../utils'
+import type { Response } from '../../types'
+import { formatPercentage, hasResponseWarnings } from '../../utils'
 
 interface ResponseTableRowProps {
   response: Response

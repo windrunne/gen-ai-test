@@ -1,7 +1,7 @@
 /**
  * Metrics Chart Component - Displays metrics summary with chart and table
  */
-import type { MetricsChartProps } from './types'
+import type { MetricsChartProps } from '../types'
 import MetricsHelpSection from './MetricsHelpSection'
 import MetricsBarChart from './MetricsBarChart'
 import MetricsStatisticsTable from './MetricsStatisticsTable'

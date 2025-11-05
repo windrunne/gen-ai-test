@@ -1,8 +1,8 @@
 /**
  * Metrics Statistics Table Component
  */
-import type { MetricsSummary } from '../types'
-import { formatPercentage, formatMetricName } from '../utils'
+import type { MetricsSummary } from '../../types'
+import { formatPercentage, formatMetricName } from '../../utils'
 
 interface MetricsStatisticsTableProps {
   metricsSummary: MetricsSummary

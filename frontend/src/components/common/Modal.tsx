@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
-import type { ModalProps } from './types'
-import { UI_CONFIG } from '../constants'
+import type { ModalProps } from '../types'
+import { UI_CONFIG } from '../../constants'
 
 export default function Modal({
   isOpen,

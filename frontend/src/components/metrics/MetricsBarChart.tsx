@@ -2,9 +2,9 @@
  * Metrics Bar Chart Component
  */
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import type { MetricsSummary } from '../types'
-import { formatMetricName } from '../utils'
-import { METRIC_DISPLAY } from '../constants'
+import type { MetricsSummary } from '../../types'
+import { formatMetricName } from '../../utils'
+import { METRIC_DISPLAY } from '../../constants'
 
 interface MetricsBarChartProps {
   metricsSummary: MetricsSummary

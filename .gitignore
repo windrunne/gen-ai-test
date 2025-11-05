@@ -56,6 +56,8 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+# PostgreSQL (keep local .env for connection strings)
+# *.sql
 
 # Logs
 *.log

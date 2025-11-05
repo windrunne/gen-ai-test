@@ -2,7 +2,7 @@
  * Parameter Selector Component - Reusable for temperature and top_p
  */
 import { X } from 'lucide-react'
-import type { ParameterType } from '../types'
+import type { ParameterType } from '../../types'
 
 interface ParameterSelectorProps {
   type: ParameterType

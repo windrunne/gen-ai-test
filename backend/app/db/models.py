@@ -1,7 +1,8 @@
 """
 Database models for LLM Lab
 """
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
@@ -38,7 +39,7 @@ class Response(Base):
     finish_reason = Column(String(50))
     
     # Validation metadata (stores validation results)
-    validation_metadata = Column(JSON, nullable=True)
+    validation_metadata = Column(JSONB, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -59,8 +60,7 @@ class Metric(Base):
     name = Column(String(100), nullable=False)
     value = Column(Float, nullable=False)
     
-    # Optional metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
-    metadata_json = Column(JSON, nullable=True)
+    metadata_json = Column(JSONB, nullable=True)
     
     # Timestamp
     created_at = Column(DateTime(timezone=True), server_default=func.now())

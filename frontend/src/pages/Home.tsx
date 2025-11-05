@@ -3,10 +3,10 @@
  */
 import { useState } from 'react'
 import { Sparkles, Loader2 } from 'lucide-react'
-import ParameterModal from '../components/ParameterModal'
-import ParameterSelector from '../components/ParameterSelector'
-import FormField from '../components/FormField'
-import InfoBox from '../components/InfoBox'
+import ParameterModal from '../components/experiments/ParameterModal'
+import ParameterSelector from '../components/experiments/ParameterSelector'
+import FormField from '../components/common/FormField'
+import InfoBox from '../components/common/InfoBox'
 import { useCreateExperiment } from '../hooks'
 import type { ExperimentCreate } from '../types'
 import { PARAMETER_CONSTRAINTS } from '../constants'
@@ -156,7 +156,7 @@ export default function Home() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="btn-primary"
+              className="btn-primary flex gap-2 items-center"
               disabled={createExperiment.isPending}
             >
               {createExperiment.isPending ? (

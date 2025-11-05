@@ -23,8 +23,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
     
-    # Database Configuration
-    DATABASE_URL: str = "sqlite:///./llm_lab.db"
+    # Database Configuration (Supabase PostgreSQL)
+    # Can be overridden via .env file or environment variable
+    DATABASE_URL: str = "postgresql://postgres.jyjmkoyymfogepnlryyg:Chris111!!!@aws-1-us-east-2.pooler.supabase.com:6543/postgres"
     
     # Application Settings
     MAX_CONCURRENT_REQUESTS: int = 10

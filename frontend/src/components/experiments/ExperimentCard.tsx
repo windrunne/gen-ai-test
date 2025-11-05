@@ -2,8 +2,8 @@
  * Experiment Card Component
  */
 import { Trash2 } from 'lucide-react'
-import type { Experiment } from '../types'
-import { formatDate } from '../utils'
+import type { Experiment } from '../../types'
+import { formatDate } from '../../utils'
 
 interface ExperimentCardProps {
   experiment: Experiment
@@ -22,7 +22,7 @@ export default function ExperimentCard({
       className="card cursor-pointer hover:shadow-lg transition-shadow"
     >
       <div className="flex items-start justify-between mb-2">
-        <h2 className="text-xl font-semibold text-gray-900 flex-1">
+        <h2 className="text-xl font-semibold text-gray-900 flex-1 max-w-full overflow-hidden truncate">
           {experiment.name}
         </h2>
         <button

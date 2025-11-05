@@ -1,8 +1,8 @@
 /**
  * Validation Warning Component - Displays response quality warnings
  */
-import { formatPercentage } from '../utils'
-import type { ValidationMetadata } from '../types'
+import { formatPercentage } from '../../utils'
+import type { ValidationMetadata } from '../../types'
 import { FileWarningIcon } from 'lucide-react'
 
 interface ValidationWarningProps {
