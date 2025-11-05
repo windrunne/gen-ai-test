@@ -119,9 +119,44 @@ class ResponseValidator:
     def clean_text(self, text: str) -> str:
         """
         Basic text cleaning - remove excessive whitespace and normalize
+        Also attempts to truncate at corruption point if detected
         """
         if not text:
             return ""
+        
+        # Try to detect where text becomes corrupted
+        # Look for sudden appearance of code-like patterns or excessive special chars
+        words = text.split()
+        if len(words) > 50:
+            # Check for sudden degradation in text quality
+            corruption_point = None
+            for i in range(len(words) - 100, len(words)):
+                if i < 0:
+                    continue
+                # Check if this section has corruption indicators
+                section = ' '.join(words[max(0, i-10):i+10])
+                special_char_ratio = len(re.findall(r'[^\w\s]', section)) / max(len(section), 1)
+                avg_word_len = sum(len(w) for w in words[max(0, i-10):i+10]) / max(len(words[max(0, i-10):i+10]), 1)
+                
+                # If we detect corruption indicators, mark this as potential break point
+                if special_char_ratio > 0.4 or avg_word_len > 20:
+                    corruption_point = i
+                    break
+            
+            # If we found a corruption point and it's not too early, truncate there
+            if corruption_point and corruption_point > len(words) * 0.3:  # At least 30% of text is good
+                # Find the last complete sentence before corruption
+                truncated_text = ' '.join(words[:corruption_point])
+                # Find last sentence ending
+                last_period = max(
+                    truncated_text.rfind('.'),
+                    truncated_text.rfind('!'),
+                    truncated_text.rfind('?')
+                )
+                if last_period > len(truncated_text) * 0.8:  # Sentence ending is near the end
+                    text = truncated_text[:last_period + 1]
+                else:
+                    text = truncated_text
         
         # Remove excessive whitespace
         text = re.sub(r'\s+', ' ', text)
