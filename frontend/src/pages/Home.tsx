@@ -257,6 +257,22 @@ export default function Home() {
           </p>
         </div>
       </div>
+
+      {/* Parameter Modals */}
+      <ParameterModal
+        isOpen={showTempModal}
+        onClose={() => setShowTempModal(false)}
+        onAdd={addTempValue}
+        type="temperature"
+        existingValues={formData.temperature_range}
+      />
+      <ParameterModal
+        isOpen={showTopPModal}
+        onClose={() => setShowTopPModal(false)}
+        onAdd={addTopPValue}
+        type="top_p"
+        existingValues={formData.top_p_range}
+      />
     </div>
   )
 }
