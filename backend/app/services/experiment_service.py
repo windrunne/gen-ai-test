@@ -10,7 +10,7 @@ from app.repositories.experiment_repository import ExperimentRepository
 from app.repositories.response_repository import ResponseRepository
 from app.repositories.metric_repository import MetricRepository
 from app.services.llm_service import LLMService
-from app.services.metrics_service import MetricsService
+from app.services.quality_metrics_service import MetricsService
 from app.services.response_validator import ResponseValidator
 from app.schemas.experiment import ExperimentCreate
 from app.core.constants import DEFAULT_BATCH_SIZE
