@@ -1,188 +1,260 @@
 import { useState } from 'react'
 import { Response } from '../api/experiments'
-import { GitCompare, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Eye, TrendingUp } from 'lucide-react'
 
 interface ComparisonViewProps {
   responses: Response[]
 }
 
+interface ResponseModalProps {
+  response: Response | null
+  onClose: () => void
+}
+
+function ResponseModal({ response, onClose }: ResponseModalProps) {
+  if (!response) return null
+
+  const overallScore = response.metrics.find((m) => m.name === 'overall_score')
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">Response Details</h3>
+            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+              <span>Temperature: {response.temperature}</span>
+              <span>Top P: {response.top_p}</span>
+              {overallScore && (
+                <span className="font-semibold text-primary-600">
+                  Overall Score: {(overallScore.value * 100).toFixed(1)}%
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        
+        <div className="p-6">
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">Response Text:</h4>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-gray-700 whitespace-pre-wrap">{response.text}</p>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-4">Metrics:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {response.metrics.map((metric) => (
+                <div key={metric.name} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-xs text-gray-500 mb-1 capitalize">
+                    {metric.name.replace('_score', '').replace('_', ' ')}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {(metric.value * 100).toFixed(1)}%
+                  </div>
+                  {metric.metadata && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {JSON.stringify(metric.metadata)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ComparisonView({ responses }: ComparisonViewProps) {
-  const [selectedIndices, setSelectedIndices] = useState<[number, number]>([0, 1])
+  const [selectedResponse, setSelectedResponse] = useState<Response | null>(null)
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Response | 'overall_score'
+    direction: 'asc' | 'desc'
+  }>({ key: 'overall_score', direction: 'desc' })
 
-  const response1 = responses[selectedIndices[0]]
-  const response2 = responses[selectedIndices[1]]
+  // Sort responses
+  const sortedResponses = [...responses].sort((a, b) => {
+    let aValue: number
+    let bValue: number
 
-  const navigateComparison = (direction: 'prev' | 'next') => {
-    if (direction === 'next') {
-      // Move to next pair
-      if (selectedIndices[1] < responses.length - 1) {
-        // Move second index forward
-        setSelectedIndices([selectedIndices[0], selectedIndices[1] + 1])
-      } else if (selectedIndices[0] < responses.length - 2) {
-        // Move first index forward, second becomes first + 1
-        setSelectedIndices([selectedIndices[0] + 1, selectedIndices[0] + 2])
-      }
+    if (sortConfig.key === 'overall_score') {
+      const aOverall = a.metrics.find((m) => m.name === 'overall_score')?.value || 0
+      const bOverall = b.metrics.find((m) => m.name === 'overall_score')?.value || 0
+      aValue = aOverall
+      bValue = bOverall
+    } else if (sortConfig.key === 'temperature' || sortConfig.key === 'top_p') {
+      aValue = a[sortConfig.key]
+      bValue = b[sortConfig.key]
     } else {
-      // Move to previous pair
-      if (selectedIndices[1] > selectedIndices[0] + 1) {
-        // Move second index backward
-        setSelectedIndices([selectedIndices[0], selectedIndices[1] - 1])
-      } else if (selectedIndices[0] > 0) {
-        // Move first index backward, second becomes last
-        setSelectedIndices([selectedIndices[0] - 1, responses.length - 1])
-      }
+      return 0
     }
+
+    if (aValue < bValue) {
+      return sortConfig.direction === 'asc' ? -1 : 1
+    }
+    if (aValue > bValue) {
+      return sortConfig.direction === 'asc' ? 1 : -1
+    }
+    return 0
+  })
+
+  const handleSort = (key: keyof Response | 'overall_score') => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }))
   }
 
-  const selectResponse1 = (index: number) => {
-    if (index !== selectedIndices[1] && index >= 0 && index < responses.length) {
-      setSelectedIndices([index, selectedIndices[1]])
-    }
+  const SortIcon = ({ columnKey }: { columnKey: keyof Response | 'overall_score' }) => {
+    if (sortConfig.key !== columnKey) return null
+    return sortConfig.direction === 'asc' ? '↑' : '↓'
   }
-
-  const selectResponse2 = (index: number) => {
-    if (index !== selectedIndices[0] && index >= 0 && index < responses.length) {
-      setSelectedIndices([selectedIndices[0], index])
-    }
-  }
-
-  const overall1 = response1.metrics.find((m) => m.name === 'overall_score')
-  const overall2 = response2.metrics.find((m) => m.name === 'overall_score')
 
   return (
     <div className="space-y-4">
-      {/* Response Selectors */}
-      <div className="card bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Select Responses to Compare</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs text-gray-600 mb-2">Response 1:</label>
-            <select
-              value={selectedIndices[0]}
-              onChange={(e) => selectResponse1(parseInt(e.target.value))}
-              className="input-field text-sm"
-            >
-              {responses.map((_, idx) => (
-                <option key={idx} value={idx} disabled={idx === selectedIndices[1]}>
-                  Response {idx + 1} (Temp: {responses[idx].temperature}, Top P: {responses[idx].top_p})
-                  {idx === selectedIndices[1] && ' (selected as Response 2)'}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-2">Response 2:</label>
-            <select
-              value={selectedIndices[1]}
-              onChange={(e) => selectResponse2(parseInt(e.target.value))}
-              className="input-field text-sm"
-            >
-              {responses.map((_, idx) => (
-                <option key={idx} value={idx} disabled={idx === selectedIndices[0]}>
-                  Response {idx + 1} (Temp: {responses[idx].temperature}, Top P: {responses[idx].top_p})
-                  {idx === selectedIndices[0] && ' (selected as Response 1)'}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <div className="flex items-center space-x-2 mb-4">
+        <TrendingUp className="h-5 w-5 text-primary-600" />
+        <h2 className="text-xl font-semibold">All Responses Comparison</h2>
+        <span className="text-sm text-gray-500">({responses.length} responses)</span>
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigateComparison('prev')}
-          disabled={selectedIndices[0] === 0 && selectedIndices[1] === selectedIndices[0] + 1}
-          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous Pair
-        </button>
-        <div className="flex items-center space-x-2">
-          <GitCompare className="h-5 w-5 text-primary-600" />
-          <span className="text-sm text-gray-600">
-            Comparing Response {selectedIndices[0] + 1} and Response {selectedIndices[1] + 1} of{' '}
-            {responses.length}
-          </span>
-        </div>
-        <button
-          onClick={() => navigateComparison('next')}
-          disabled={selectedIndices[0] >= responses.length - 2 && selectedIndices[1] >= responses.length - 1}
-          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Next Pair
-          <ChevronRight className="h-4 w-4" />
-        </button>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 bg-white rounded-lg shadow">
+          <thead className="bg-gray-50">
+            <tr>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('overall_score')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Overall Score</span>
+                  <SortIcon columnKey="overall_score" />
+                </div>
+              </th>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('temperature')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Temperature</span>
+                  <SortIcon columnKey="temperature" />
+                </div>
+              </th>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('top_p')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Top P</span>
+                  <SortIcon columnKey="top_p" />
+                </div>
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Length Score
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Coherence
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Completeness
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Structure
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Readability
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {sortedResponses.map((response) => {
+              const overallScore = response.metrics.find((m) => m.name === 'overall_score')
+              const lengthScore = response.metrics.find((m) => m.name === 'length_score')
+              const coherenceScore = response.metrics.find((m) => m.name === 'coherence_score')
+              const completenessScore = response.metrics.find((m) => m.name === 'completeness_score')
+              const structureScore = response.metrics.find((m) => m.name === 'structure_score')
+              const readabilityScore = response.metrics.find((m) => m.name === 'readability_score')
+
+              return (
+                <tr
+                  key={response.id}
+                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => setSelectedResponse(response)}
+                >
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="font-semibold text-gray-900">
+                        {overallScore ? `${(overallScore.value * 100).toFixed(1)}%` : 'N/A'}
+                      </div>
+                      <div
+                        className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden"
+                        title={`${overallScore ? (overallScore.value * 100).toFixed(1) : 0}%`}
+                      >
+                        <div
+                          className="h-full bg-primary-600 transition-all"
+                          style={{
+                            width: `${overallScore ? overallScore.value * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{response.temperature}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{response.top_p}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {lengthScore ? `${(lengthScore.value * 100).toFixed(1)}%` : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {coherenceScore ? `${(coherenceScore.value * 100).toFixed(1)}%` : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {completenessScore ? `${(completenessScore.value * 100).toFixed(1)}%` : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {structureScore ? `${(structureScore.value * 100).toFixed(1)}%` : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {readabilityScore ? `${(readabilityScore.value * 100).toFixed(1)}%` : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedResponse(response)
+                      }}
+                      className="btn-secondary text-sm flex items-center space-x-1"
+                      aria-label="View response details"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>View</span>
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
 
-      {/* Comparison Grid */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Response 1 */}
-        <div className="card border-2 border-primary-200">
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">Response {selectedIndices[0] + 1}</h3>
-              {overall1 && (
-                <span className="text-sm font-semibold text-primary-600">
-                  Score: {(overall1.value * 100).toFixed(1)}%
-                </span>
-              )}
-            </div>
-            <div className="flex space-x-4 text-sm text-gray-600">
-              <span>Temp: {response1.temperature}</span>
-              <span>Top P: {response1.top_p}</span>
-            </div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
-            <p className="text-sm whitespace-pre-wrap">{response1.text}</p>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-            {response1.metrics.slice(0, 6).map((metric) => (
-              <div key={metric.name} className="text-center">
-                <div className="text-gray-500 capitalize">
-                  {metric.name.replace('_score', '').replace('_', ' ')}
-                </div>
-                <div className="font-semibold">
-                  {(metric.value * 100).toFixed(0)}%
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Response 2 */}
-        <div className="card border-2 border-blue-200">
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">Response {selectedIndices[1] + 1}</h3>
-              {overall2 && (
-                <span className="text-sm font-semibold text-blue-600">
-                  Score: {(overall2.value * 100).toFixed(1)}%
-                </span>
-              )}
-            </div>
-            <div className="flex space-x-4 text-sm text-gray-600">
-              <span>Temp: {response2.temperature}</span>
-              <span>Top P: {response2.top_p}</span>
-            </div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
-            <p className="text-sm whitespace-pre-wrap">{response2.text}</p>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-            {response2.metrics.slice(0, 6).map((metric) => (
-              <div key={metric.name} className="text-center">
-                <div className="text-gray-500 capitalize">
-                  {metric.name.replace('_score', '').replace('_', ' ')}
-                </div>
-                <div className="font-semibold">
-                  {(metric.value * 100).toFixed(0)}%
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {selectedResponse && (
+        <ResponseModal
+          response={selectedResponse}
+          onClose={() => setSelectedResponse(null)}
+        />
+      )}
     </div>
   )
 }
