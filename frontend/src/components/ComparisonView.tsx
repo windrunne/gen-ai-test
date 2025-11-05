@@ -16,6 +16,7 @@ function ResponseModal({ response, onClose }: ResponseModalProps) {
   if (!response) return null
 
   const overallScore = response.metrics.find((m) => m.name === 'overall_score')
+  const validation = response.validation_metadata
 
   return (
     <Modal
@@ -25,6 +26,42 @@ function ResponseModal({ response, onClose }: ResponseModalProps) {
       size="xl"
     >
       <div className="p-6">
+        {/* Validation Warnings */}
+        {validation && (validation.is_truncated || validation.is_corrupted || validation.warnings.length > 0) && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98 1.742 2.98H4.42c1.955 0 2.492-1.646 1.742-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Response Quality Warning
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <ul className="list-disc list-inside space-y-1">
+                    {validation.warnings.map((warning, idx) => (
+                      <li key={idx}>{warning}</li>
+                    ))}
+                    {validation.is_truncated && (
+                      <li>Response was cut off due to token limit</li>
+                    )}
+                    {validation.is_corrupted && (
+                      <li>Response may contain corrupted or low-quality content</li>
+                    )}
+                  </ul>
+                  {validation.corruption_score > 0 && (
+                    <p className="mt-2 text-xs">
+                      Corruption Score: {(validation.corruption_score * 100).toFixed(1)}%
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center space-x-4 mb-6 text-sm text-gray-600 border-b border-gray-200 pb-4">
           <span>Temperature: {response.temperature}</span>
           <span>Top P: {response.top_p}</span>
@@ -174,11 +211,13 @@ export default function ComparisonView({ responses }: ComparisonViewProps) {
               const completenessScore = response.metrics.find((m) => m.name === 'completeness_score')
               const structureScore = response.metrics.find((m) => m.name === 'structure_score')
               const readabilityScore = response.metrics.find((m) => m.name === 'readability_score')
+              const validation = response.validation_metadata
+              const hasWarning = validation && (validation.is_truncated || validation.is_corrupted || validation.warnings.length > 0)
 
               return (
                 <tr
                   key={response.id}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  className={`hover:bg-gray-50 cursor-pointer transition-colors ${hasWarning ? 'bg-yellow-50' : ''}`}
                   onClick={() => setSelectedResponse(response)}
                 >
                   <td className="px-4 py-3 text-sm">
@@ -186,6 +225,11 @@ export default function ComparisonView({ responses }: ComparisonViewProps) {
                       <div className="font-semibold text-gray-900">
                         {overallScore ? `${(overallScore.value * 100).toFixed(1)}%` : 'N/A'}
                       </div>
+                      {hasWarning && (
+                        <span className="text-yellow-600" title={validation?.warnings.join(', ') || 'Response quality warning'}>
+                          ⚠️
+                        </span>
+                      )}
                       <div
                         className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden"
                         title={`${overallScore ? (overallScore.value * 100).toFixed(1) : 0}%`}

@@ -93,24 +93,52 @@ async def create_experiment(
                     max_tokens=experiment_data.max_tokens
                 )
                 
-                print(f"[EXPERIMENT {experiment.id}] LLM response {idx} received (length: {len(llm_response['text'])})")
+                print(f"[EXPERIMENT {experiment.id}] LLM response {idx} received (length: {len(llm_response['text'])}, finish_reason: {llm_response.get('finish_reason', 'stop')})")
+                
+                # Validate response
+                from app.services.response_validator import ResponseValidator
+                validator = ResponseValidator()
+                validation = validator.validate_response(
+                    llm_response["text"],
+                    llm_response.get("finish_reason", "stop")
+                )
+                
+                if validation["warnings"]:
+                    print(f"[EXPERIMENT {experiment.id}] Response {idx} warnings: {', '.join(validation['warnings'])}")
+                
+                # Use cleaned text for metrics calculation
+                response_text = validation["cleaned_text"] if validation["cleaned_text"] else llm_response["text"]
                 
                 # Calculate metrics (CPU-bound, do this before DB operations)
-                metrics = metrics_service.calculate_all_metrics(llm_response["text"])
+                metrics = metrics_service.calculate_all_metrics(response_text)
                 print(f"[EXPERIMENT {experiment.id}] Metrics calculated for response {idx}: {list(metrics.keys())}")
                 
                 # Create new DB session for this response (thread-safe)
                 from app.db.database import SessionLocal
                 local_db = SessionLocal()
                 try:
-                    # Create response record
+                    # Create response record (use cleaned text if available)
+                    response_text_to_store = validation.get("cleaned_text") or llm_response["text"]
+                    
+                    # Store validation metadata (excluding cleaned_text to save space)
+                    validation_metadata = {
+                        "is_valid": validation["is_valid"],
+                        "is_corrupted": validation["is_corrupted"],
+                        "is_truncated": validation["is_truncated"],
+                        "corruption_score": validation["corruption_score"],
+                        "warnings": validation["warnings"]
+                    }
+                    
+                    # Store original text if it differs significantly from cleaned
+                    # For now, we'll store the cleaned version but note truncation in finish_reason
                     response = Response(
                         experiment_id=experiment.id,
                         temperature=temp,
                         top_p=top_p,
                         max_tokens=experiment_data.max_tokens,
-                        text=llm_response["text"],
-                        finish_reason=llm_response.get("finish_reason", "stop")
+                        text=response_text_to_store,
+                        finish_reason=llm_response.get("finish_reason", "stop"),
+                        validation_metadata=validation_metadata
                     )
                     local_db.add(response)
                     local_db.commit()

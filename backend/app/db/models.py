@@ -37,6 +37,9 @@ class Response(Base):
     text = Column(Text, nullable=False)
     finish_reason = Column(String(50))
     
+    # Validation metadata (stores validation results)
+    validation_metadata = Column(JSON, nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

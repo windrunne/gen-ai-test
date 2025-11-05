@@ -20,6 +20,7 @@ class ResponseWithMetrics(BaseModel):
     max_tokens: int
     text: str
     finish_reason: Optional[str]
+    validation_metadata: Optional[dict] = None
     created_at: str
     metrics: List[dict]
     
@@ -55,6 +56,7 @@ async def get_experiment_responses(
             "max_tokens": response.max_tokens,
             "text": response.text,
             "finish_reason": response.finish_reason,
+            "validation_metadata": response.validation_metadata,
             "created_at": response.created_at.isoformat() if response.created_at else "",
             "metrics": metrics_data
         })
@@ -90,6 +92,7 @@ async def get_response(
         "max_tokens": response.max_tokens,
         "text": response.text,
         "finish_reason": response.finish_reason,
+        "validation_metadata": response.validation_metadata,
         "created_at": response.created_at.isoformat() if response.created_at else "",
         "metrics": metrics_data
     }

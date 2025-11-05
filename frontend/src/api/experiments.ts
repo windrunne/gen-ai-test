@@ -27,6 +27,13 @@ export interface Response {
   max_tokens: number
   text: string
   finish_reason: string | null
+  validation_metadata?: {
+    is_valid: boolean
+    is_corrupted: boolean
+    is_truncated: boolean
+    corruption_score: number
+    warnings: string[]
+  } | null
   created_at: string
   metrics: Array<{
     name: string
