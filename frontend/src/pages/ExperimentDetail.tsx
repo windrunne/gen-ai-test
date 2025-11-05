@@ -8,8 +8,7 @@ import {
   BarChart3,
   FileText,
 } from 'lucide-react'
-import { experimentsApi, Response, MetricsSummary } from '../api/experiments'
-import ResponseCard from '../components/ResponseCard'
+import { experimentsApi, MetricsSummary } from '../api/experiments'
 import MetricsChart from '../components/MetricsChart'
 import ComparisonView from '../components/ComparisonView'
 
@@ -136,33 +135,19 @@ export default function ExperimentDetail() {
         </div>
       )}
 
-      {/* Responses */}
-      <div>
-        <div className="flex items-center mb-4">
-          <FileText className="h-6 w-6 text-primary-600 mr-2" />
-          <h2 className="text-xl font-semibold">Responses</h2>
-        </div>
-        {responses && responses.length > 0 ? (
-          <div className="space-y-4">
-            {responses.map((response) => (
-              <ResponseCard key={response.id} response={response} />
-            ))}
-          </div>
-        ) : (
-          <div className="card text-center py-8">
-            <p className="text-gray-500">No responses generated yet</p>
-          </div>
-        )}
-      </div>
-
-      {/* Comparison View */}
-      {responses && responses.length > 1 && (
+      {/* Comparison View - Shows all responses in table format */}
+      {responses && responses.length > 0 ? (
         <div className="card">
           <div className="flex items-center mb-4">
             <TrendingUp className="h-6 w-6 text-primary-600 mr-2" />
-            <h2 className="text-xl font-semibold">Comparison View</h2>
+            <h2 className="text-xl font-semibold">Responses Comparison</h2>
+            <span className="text-sm text-gray-500 ml-2">({responses.length} responses)</span>
           </div>
           <ComparisonView responses={responses} />
+        </div>
+      ) : (
+        <div className="card text-center py-8">
+          <p className="text-gray-500">No responses generated yet</p>
         </div>
       )}
     </div>
