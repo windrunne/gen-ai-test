@@ -14,15 +14,35 @@ export default function ComparisonView({ responses }: ComparisonViewProps) {
 
   const navigateComparison = (direction: 'prev' | 'next') => {
     if (direction === 'next') {
+      // Move to next pair
       if (selectedIndices[1] < responses.length - 1) {
+        // Move second index forward
         setSelectedIndices([selectedIndices[0], selectedIndices[1] + 1])
       } else if (selectedIndices[0] < responses.length - 2) {
+        // Move first index forward, second becomes first + 1
         setSelectedIndices([selectedIndices[0] + 1, selectedIndices[0] + 2])
       }
     } else {
-      if (selectedIndices[0] > 0) {
-        setSelectedIndices([selectedIndices[0] - 1, selectedIndices[1] - 1])
+      // Move to previous pair
+      if (selectedIndices[1] > selectedIndices[0] + 1) {
+        // Move second index backward
+        setSelectedIndices([selectedIndices[0], selectedIndices[1] - 1])
+      } else if (selectedIndices[0] > 0) {
+        // Move first index backward, second becomes last
+        setSelectedIndices([selectedIndices[0] - 1, responses.length - 1])
       }
+    }
+  }
+
+  const selectResponse1 = (index: number) => {
+    if (index !== selectedIndices[1] && index >= 0 && index < responses.length) {
+      setSelectedIndices([index, selectedIndices[1]])
+    }
+  }
+
+  const selectResponse2 = (index: number) => {
+    if (index !== selectedIndices[0] && index >= 0 && index < responses.length) {
+      setSelectedIndices([selectedIndices[0], index])
     }
   }
 
@@ -31,29 +51,66 @@ export default function ComparisonView({ responses }: ComparisonViewProps) {
 
   return (
     <div className="space-y-4">
+      {/* Response Selectors */}
+      <div className="card bg-gray-50">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Select Responses to Compare</h3>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Response 1:</label>
+            <select
+              value={selectedIndices[0]}
+              onChange={(e) => selectResponse1(parseInt(e.target.value))}
+              className="input-field text-sm"
+            >
+              {responses.map((_, idx) => (
+                <option key={idx} value={idx} disabled={idx === selectedIndices[1]}>
+                  Response {idx + 1} (Temp: {responses[idx].temperature}, Top P: {responses[idx].top_p})
+                  {idx === selectedIndices[1] && ' (selected as Response 2)'}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Response 2:</label>
+            <select
+              value={selectedIndices[1]}
+              onChange={(e) => selectResponse2(parseInt(e.target.value))}
+              className="input-field text-sm"
+            >
+              {responses.map((_, idx) => (
+                <option key={idx} value={idx} disabled={idx === selectedIndices[0]}>
+                  Response {idx + 1} (Temp: {responses[idx].temperature}, Top P: {responses[idx].top_p})
+                  {idx === selectedIndices[0] && ' (selected as Response 1)'}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigateComparison('prev')}
-          disabled={selectedIndices[0] === 0}
-          className="btn-secondary disabled:opacity-50"
+          disabled={selectedIndices[0] === 0 && selectedIndices[1] === selectedIndices[0] + 1}
+          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          Previous Pair
         </button>
         <div className="flex items-center space-x-2">
           <GitCompare className="h-5 w-5 text-primary-600" />
           <span className="text-sm text-gray-600">
-            Comparing {selectedIndices[0] + 1} and {selectedIndices[1] + 1} of{' '}
+            Comparing Response {selectedIndices[0] + 1} and Response {selectedIndices[1] + 1} of{' '}
             {responses.length}
           </span>
         </div>
         <button
           onClick={() => navigateComparison('next')}
-          disabled={selectedIndices[1] >= responses.length - 1}
-          className="btn-secondary disabled:opacity-50"
+          disabled={selectedIndices[0] >= responses.length - 2 && selectedIndices[1] >= responses.length - 1}
+          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Next
+          Next Pair
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
