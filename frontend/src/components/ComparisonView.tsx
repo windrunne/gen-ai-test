@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Response } from '../api/experiments'
 import { Eye, TrendingUp } from 'lucide-react'
+import Modal from './Modal'
 
 interface ComparisonViewProps {
   responses: Response[]
@@ -17,56 +18,47 @@ function ResponseModal({ response, onClose }: ResponseModalProps) {
   const overallScore = response.metrics.find((m) => m.name === 'overall_score')
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900">Response Details</h3>
-            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-              <span>Temperature: {response.temperature}</span>
-              <span>Top P: {response.top_p}</span>
-              {overallScore && (
-                <span className="font-semibold text-primary-600">
-                  Overall Score: {(overallScore.value * 100).toFixed(1)}%
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
-            aria-label="Close"
-          >
-            ×
-          </button>
+    <Modal
+      isOpen={!!response}
+      onClose={onClose}
+      title="Response Details"
+      size="xl"
+    >
+      <div className="p-6">
+        <div className="flex items-center space-x-4 mb-6 text-sm text-gray-600 border-b border-gray-200 pb-4">
+          <span>Temperature: {response.temperature}</span>
+          <span>Top P: {response.top_p}</span>
+          {overallScore && (
+            <span className="font-semibold text-primary-600">
+              Overall Score: {(overallScore.value * 100).toFixed(1)}%
+            </span>
+          )}
         </div>
         
-        <div className="p-6">
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Response Text:</h4>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-700 whitespace-pre-wrap">{response.text}</p>
-            </div>
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Response Text:</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-gray-700 whitespace-pre-wrap">{response.text}</p>
           </div>
+        </div>
 
-          <div>
-            <h4 className="text-sm font-semibold text-gray-700 mb-4">Metrics:</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {response.metrics.map((metric) => (
-                <div key={metric.name} className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-xs text-gray-500 mb-1 capitalize">
-                    {metric.name.replace('_score', '').replace('_', ' ')}
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {(metric.value * 100).toFixed(1)}%
-                  </div>
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-4">Metrics:</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {response.metrics.map((metric) => (
+              <div key={metric.name} className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-xs text-gray-500 mb-1 capitalize">
+                  {metric.name.replace('_score', '').replace('_', ' ')}
                 </div>
-              ))}
-            </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {(metric.value * 100).toFixed(1)}%
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
