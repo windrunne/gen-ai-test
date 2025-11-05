@@ -60,11 +60,6 @@ function ResponseModal({ response, onClose }: ResponseModalProps) {
                   <div className="text-2xl font-bold text-gray-900">
                     {(metric.value * 100).toFixed(1)}%
                   </div>
-                  {metric.metadata && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      {JSON.stringify(metric.metadata)}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
