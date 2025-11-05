@@ -3,7 +3,6 @@
  */
 import { X } from 'lucide-react'
 import type { ParameterType } from '../types'
-import { PARAMETER_CONSTRAINTS } from '../constants'
 
 interface ParameterSelectorProps {
   type: ParameterType

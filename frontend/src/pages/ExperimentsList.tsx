@@ -2,7 +2,7 @@
  * Experiments List Page - View all experiments
  */
 import { useNavigate } from 'react-router-dom'
-import { Trash2, FileText } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import ExperimentCard from '../components/ExperimentCard'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { useExperiments, useDeleteExperiment } from '../hooks'
