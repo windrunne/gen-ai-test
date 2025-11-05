@@ -29,6 +29,17 @@ export interface ResponseModalProps {
   onClose: () => void
 }
 
+export interface ExperimentCardProps {
+  experiment: {
+    id: number
+    name: string
+    prompt: string
+    created_at: string
+  }
+  onSelect: () => void
+  onDelete: (e: React.MouseEvent) => void
+}
+
 export interface MetricsChartProps {
   metricsSummary: Record<string, any>
 }

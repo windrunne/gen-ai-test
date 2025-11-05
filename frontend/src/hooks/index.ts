@@ -12,3 +12,5 @@ export {
   useExperimentResponses,
   useExperimentMetrics,
 } from './useExperimentData'
+
+export { useSortable } from './useSortable'

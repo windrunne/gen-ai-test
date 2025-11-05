@@ -4,6 +4,9 @@
 import { useState } from 'react'
 import { Sparkles, Loader2 } from 'lucide-react'
 import ParameterModal from '../components/ParameterModal'
+import ParameterSelector from '../components/ParameterSelector'
+import FormField from '../components/FormField'
+import InfoBox from '../components/InfoBox'
 import { useCreateExperiment } from '../hooks'
 import type { ExperimentCreate } from '../types'
 import { PARAMETER_CONSTRAINTS } from '../constants'
@@ -74,13 +77,11 @@ export default function Home() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Experiment Name */}
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Experiment Name
-            </label>
+          <FormField
+            label="Experiment Name"
+            htmlFor="name"
+            required
+          >
             <input
               type="text"
               id="name"
@@ -92,16 +93,10 @@ export default function Home() {
               className="input-field"
               placeholder="e.g., Prompt Analysis Experiment 1"
             />
-          </div>
+          </FormField>
 
           {/* Prompt */}
-          <div>
-            <label
-              htmlFor="prompt"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Prompt
-            </label>
+          <FormField label="Prompt" htmlFor="prompt" required>
             <textarea
               id="prompt"
               required
@@ -113,89 +108,34 @@ export default function Home() {
               className="input-field"
               placeholder="Enter your prompt here..."
             />
-          </div>
+          </FormField>
 
           {/* Temperature Range */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Temperature Range
-            </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.temperature_range.map((value, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800"
-                >
-                  {value}
-                  <button
-                    type="button"
-                    onClick={() => removeTempValue(index)}
-                    className="ml-2 text-primary-600 hover:text-primary-800"
-                    aria-label={`Remove temperature ${value}`}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowTempModal(true)}
-              className="btn-secondary text-sm"
-            >
-              + Add Temperature Value
-            </button>
-            <p className="text-xs text-gray-500 mt-1">
-              Temperature controls randomness. Higher values (0.7-2.0) make output
-              more creative, lower values (0.0-0.7) make it more focused.
-            </p>
-          </div>
+          <ParameterSelector
+            type="temperature"
+            values={formData.temperature_range}
+            onAdd={() => setShowTempModal(true)}
+            onRemove={removeTempValue}
+            label="Temperature Range"
+            description="Temperature controls randomness. Higher values (0.7-2.0) make output more creative, lower values (0.0-0.7) make it more focused."
+          />
 
           {/* Top P Range */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Top P Range
-            </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.top_p_range.map((value, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-                >
-                  {value}
-                  <button
-                    type="button"
-                    onClick={() => removeTopPValue(index)}
-                    className="ml-2 text-blue-600 hover:text-blue-800"
-                    aria-label={`Remove top_p ${value}`}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowTopPModal(true)}
-              className="btn-secondary text-sm"
-            >
-              + Add Top P Value
-            </button>
-            <p className="text-xs text-gray-500 mt-1">
-              Top P (nucleus sampling) limits token selection to the smallest set
-              whose cumulative probability exceeds the threshold. Lower values focus
-              on more likely tokens.
-            </p>
-          </div>
+          <ParameterSelector
+            type="top_p"
+            values={formData.top_p_range}
+            onAdd={() => setShowTopPModal(true)}
+            onRemove={removeTopPValue}
+            label="Top P Range"
+            description="Top P (nucleus sampling) limits token selection to the smallest set whose cumulative probability exceeds the threshold. Lower values focus on more likely tokens."
+          />
 
           {/* Max Tokens */}
-          <div>
-            <label
-              htmlFor="max_tokens"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Max Tokens
-            </label>
+          <FormField
+            label="Max Tokens"
+            htmlFor="max_tokens"
+            description={`Maximum number of tokens in the response (${PARAMETER_CONSTRAINTS.MAX_TOKENS.MIN}-${PARAMETER_CONSTRAINTS.MAX_TOKENS.MAX})`}
+          >
             <input
               type="number"
               id="max_tokens"
@@ -210,10 +150,7 @@ export default function Home() {
               }
               className="input-field"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Maximum number of tokens in the response (1-{PARAMETER_CONSTRAINTS.MAX_TOKENS.MAX})
-            </p>
-          </div>
+          </FormField>
 
           {/* Submit Button */}
           <div className="flex justify-end">
@@ -234,27 +171,28 @@ export default function Home() {
           </div>
 
           {createExperiment.isError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">
+            <InfoBox variant="red">
+              <p>
                 Error: {createExperiment.error?.message || 'Failed to create experiment'}
               </p>
-            </div>
+            </InfoBox>
           )}
         </form>
 
         {/* Info Section */}
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">About Parameters</h3>
-          <p className="text-sm text-blue-800 mb-2">
-            <strong>Temperature:</strong> Controls the randomness of the output. Higher
-            values produce more diverse and creative responses, while lower values produce
-            more focused and deterministic responses.
-          </p>
-          <p className="text-sm text-blue-800">
-            <strong>Top P:</strong> (nucleus sampling) limits the token selection to the
-            smallest set whose cumulative probability exceeds the threshold. Lower values
-            focus on more likely tokens.
-          </p>
+        <div className="mt-8">
+          <InfoBox variant="blue" title="About Parameters">
+            <p className="mb-2">
+              <strong>Temperature:</strong> Controls the randomness of the output. Higher
+              values produce more diverse and creative responses, while lower values produce
+              more focused and deterministic responses.
+            </p>
+            <p>
+              <strong>Top P:</strong> (nucleus sampling) limits the token selection to the
+              smallest set whose cumulative probability exceeds the threshold. Lower values
+              focus on more likely tokens.
+            </p>
+          </InfoBox>
         </div>
       </div>
 

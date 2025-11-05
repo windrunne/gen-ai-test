@@ -1,21 +1,22 @@
 /**
  * Experiment Detail Page - View experiment results
  */
-import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Download, Loader2, BarChart3 } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { BarChart3 } from 'lucide-react'
 import MetricsChart from '../components/MetricsChart'
 import ComparisonView from '../components/ComparisonView'
+import ExperimentHeader from '../components/ExperimentHeader'
+import ExperimentInfo from '../components/ExperimentInfo'
+import LoadingSpinner from '../components/LoadingSpinner'
 import {
   useExperiment,
   useExperimentResponses,
   useExperimentMetrics,
 } from '../hooks'
 import { exportApi } from '../api'
-import { formatDate } from '../utils'
 
 export default function ExperimentDetail() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const experimentId = parseInt(id || '0')
 
   const { data: experiment, isLoading: expLoading } = useExperiment(experimentId)
@@ -39,11 +40,7 @@ export default function ExperimentDetail() {
   }
 
   if (expLoading || respLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-      </div>
-    )
+    return <LoadingSpinner size="lg" className="h-64" />
   }
 
   if (!experiment) {
@@ -56,44 +53,13 @@ export default function ExperimentDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate('/experiments')}
-          className="flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Experiments
-        </button>
-        <div className="flex space-x-2">
-          <button onClick={handleExportCSV} className="btn-secondary">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </button>
-          <button onClick={handleExportJSON} className="btn-secondary">
-            <Download className="h-4 w-4 mr-2" />
-            Export JSON
-          </button>
-        </div>
-      </div>
+      <ExperimentHeader
+        onExportCSV={handleExportCSV}
+        onExportJSON={handleExportJSON}
+      />
 
-      {/* Experiment Info */}
-      <div className="card">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {experiment.name}
-        </h1>
-        <p className="text-gray-600 mb-4">{experiment.prompt}</p>
-        <div className="flex items-center space-x-4 text-sm text-gray-500">
-          <span>
-            {experiment.response_count} response
-            {experiment.response_count !== 1 ? 's' : ''}
-          </span>
-          <span>•</span>
-          <span>Created {formatDate(experiment.created_at)}</span>
-        </div>
-      </div>
+      <ExperimentInfo experiment={experiment} />
 
-      {/* Metrics Summary */}
       {metricsSummary && Object.keys(metricsSummary).length > 0 && (
         <div className="card">
           <div className="flex items-center mb-4">
@@ -104,7 +70,6 @@ export default function ExperimentDetail() {
         </div>
       )}
 
-      {/* Comparison View - Shows all responses in table format */}
       {responses && responses.length > 0 ? (
         <div className="card">
           <ComparisonView responses={responses} />

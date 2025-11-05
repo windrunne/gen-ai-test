@@ -2,9 +2,10 @@
  * Experiments List Page - View all experiments
  */
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Trash2, FileText } from 'lucide-react'
+import { Trash2, FileText } from 'lucide-react'
+import ExperimentCard from '../components/ExperimentCard'
+import LoadingSpinner from '../components/LoadingSpinner'
 import { useExperiments, useDeleteExperiment } from '../hooks'
-import { formatDate } from '../utils'
 
 export default function ExperimentsList() {
   const navigate = useNavigate()
@@ -19,21 +20,14 @@ export default function ExperimentsList() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-      </div>
-    )
+    return <LoadingSpinner size="lg" className="h-64" />
   }
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Experiments</h1>
-        <button
-          onClick={() => navigate('/')}
-          className="btn-primary"
-        >
+        <button onClick={() => navigate('/')} className="btn-primary">
           + New Experiment
         </button>
       </div>
@@ -49,30 +43,12 @@ export default function ExperimentsList() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {experiments.map((experiment) => (
-            <div
+            <ExperimentCard
               key={experiment.id}
-              onClick={() => navigate(`/experiments/${experiment.id}`)}
-              className="card cursor-pointer hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h2 className="text-xl font-semibold text-gray-900 flex-1">
-                  {experiment.name}
-                </h2>
-                <button
-                  onClick={(e) => handleDelete(experiment.id, e)}
-                  className="text-red-500 hover:text-red-700 p-1"
-                  aria-label="Delete experiment"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
-              </div>
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                {experiment.prompt}
-              </p>
-              <p className="text-xs text-gray-500">
-                {formatDate(experiment.created_at)}
-              </p>
-            </div>
+              experiment={experiment}
+              onSelect={() => navigate(`/experiments/${experiment.id}`)}
+              onDelete={(e) => handleDelete(experiment.id, e)}
+            />
           ))}
         </div>
       )}
