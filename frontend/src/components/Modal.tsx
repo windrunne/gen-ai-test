@@ -40,31 +40,12 @@ export default function Modal({
     }
   }, [isOpen, onClose])
 
-  // Handle click outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(e.target as Node) &&
-        isOpen
-      ) {
-        onClose()
-      }
+  // Handle click outside (on backdrop)
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose()
     }
-
-    if (isOpen) {
-      // Use setTimeout to avoid immediate trigger on open
-      setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside)
-      }, 0)
-      // Focus the modal when it opens
-      modalRef.current?.focus()
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen, onClose])
+  }
 
   // Focus management
   useEffect(() => {
@@ -101,6 +82,7 @@ export default function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      onClick={handleBackdropClick}
     >
       <div
         ref={modalRef}
