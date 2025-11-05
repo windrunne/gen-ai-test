@@ -72,16 +72,16 @@ async def create_experiment(
         
         # Generate parameter combinations
         import itertools
+        import asyncio
         param_combinations = list(itertools.product(
             experiment_data.temperature_range,
             experiment_data.top_p_range
         ))
         
-        print(f"[EXPERIMENT {experiment.id}] Starting generation of {len(param_combinations)} responses...")
+        print(f"[EXPERIMENT {experiment.id}] Starting parallel generation of {len(param_combinations)} responses...")
         
-        # Generate responses for each combination
-        success_count = 0
-        for idx, (temp, top_p) in enumerate(param_combinations, 1):
+        async def generate_single_response(temp: float, top_p: float, idx: int):
+            """Generate a single response and save to database"""
             try:
                 print(f"[EXPERIMENT {experiment.id}] Generating response {idx}/{len(param_combinations)}: temp={temp}, top_p={top_p}")
                 
@@ -93,46 +93,73 @@ async def create_experiment(
                     max_tokens=experiment_data.max_tokens
                 )
                 
-                print(f"[EXPERIMENT {experiment.id}] LLM response received (length: {len(llm_response['text'])})")
+                print(f"[EXPERIMENT {experiment.id}] LLM response {idx} received (length: {len(llm_response['text'])})")
                 
-                # Create response record
-                response = Response(
-                    experiment_id=experiment.id,
-                    temperature=temp,
-                    top_p=top_p,
-                    max_tokens=experiment_data.max_tokens,
-                    text=llm_response["text"],
-                    finish_reason=llm_response.get("finish_reason", "stop")
-                )
-                db.add(response)
-                db.commit()
-                db.refresh(response)
-                
-                print(f"[EXPERIMENT {experiment.id}] Response saved (ID: {response.id}), calculating metrics...")
-                
-                # Calculate and store metrics
+                # Calculate metrics (CPU-bound, do this before DB operations)
                 metrics = metrics_service.calculate_all_metrics(llm_response["text"])
-                print(f"[EXPERIMENT {experiment.id}] Metrics calculated: {list(metrics.keys())}")
+                print(f"[EXPERIMENT {experiment.id}] Metrics calculated for response {idx}: {list(metrics.keys())}")
                 
-                for metric_name, metric_value in metrics.items():
-                    metric = Metric(
-                        response_id=response.id,
-                        name=metric_name,
-                        value=metric_value.get("value", 0.0),
-                        metadata_json=metric_value.get("metadata")
+                # Create new DB session for this response (thread-safe)
+                from app.db.database import SessionLocal
+                local_db = SessionLocal()
+                try:
+                    # Create response record
+                    response = Response(
+                        experiment_id=experiment.id,
+                        temperature=temp,
+                        top_p=top_p,
+                        max_tokens=experiment_data.max_tokens,
+                        text=llm_response["text"],
+                        finish_reason=llm_response.get("finish_reason", "stop")
                     )
-                    db.add(metric)
-                
-                db.commit()
-                success_count += 1
-                print(f"[EXPERIMENT {experiment.id}] Response {idx} completed successfully")
-                
+                    local_db.add(response)
+                    local_db.commit()
+                    local_db.refresh(response)
+                    
+                    # Store metrics
+                    for metric_name, metric_value in metrics.items():
+                        metric = Metric(
+                            response_id=response.id,
+                            name=metric_name,
+                            value=metric_value.get("value", 0.0),
+                            metadata_json=metric_value.get("metadata")
+                        )
+                        local_db.add(metric)
+                    
+                    local_db.commit()
+                    print(f"[EXPERIMENT {experiment.id}] Response {idx} saved successfully (ID: {response.id})")
+                    return True
+                except Exception as db_error:
+                    local_db.rollback()
+                    print(f"[EXPERIMENT {experiment.id}] DB error for response {idx}: {str(db_error)}")
+                    raise
+                finally:
+                    local_db.close()
+                    
             except Exception as e:
-                # Log error but continue with other combinations
+                # Log error but don't fail the whole experiment
                 import traceback
                 print(f"[EXPERIMENT {experiment.id}] ERROR generating response {idx} (temp={temp}, top_p={top_p}): {str(e)}")
                 traceback.print_exc()
-                continue
+                return False
+        
+        # Generate all responses in parallel
+        tasks = [
+            generate_single_response(temp, top_p, idx)
+            for idx, (temp, top_p) in enumerate(param_combinations, 1)
+        ]
+        
+        # Run all tasks concurrently with a limit to avoid overwhelming the API
+        # Process in batches of 5 to respect rate limits
+        batch_size = 5
+        success_count = 0
+        
+        for i in range(0, len(tasks), batch_size):
+            batch = tasks[i:i + batch_size]
+            print(f"[EXPERIMENT {experiment.id}] Processing batch {i//batch_size + 1}/{(len(tasks) + batch_size - 1)//batch_size}")
+            results = await asyncio.gather(*batch, return_exceptions=True)
+            success_count += sum(1 for r in results if r is True)
+            print(f"[EXPERIMENT {experiment.id}] Batch complete: {sum(1 for r in results if r is True)}/{len(batch)} successful")
         
         print(f"[EXPERIMENT {experiment.id}] Generation complete: {success_count}/{len(param_combinations)} successful")
         
