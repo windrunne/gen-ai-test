@@ -7,10 +7,12 @@ from sqlalchemy.orm import Session
 import csv
 import io
 import json
-from typing import List
 
 from app.db.database import get_db
-from app.db.models import Experiment, Response, Metric
+from app.repositories.experiment_repository import ExperimentRepository
+from app.repositories.response_repository import ResponseRepository
+from app.repositories.metric_repository import MetricRepository
+from app.core.exceptions import raise_experiment_not_found
 
 router = APIRouter()
 
@@ -21,11 +23,11 @@ async def export_experiment_csv(
     db: Session = Depends(get_db)
 ):
     """Export experiment data as CSV"""
-    experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
+    experiment = ExperimentRepository.get_by_id(db, experiment_id)
     if not experiment:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise_experiment_not_found(experiment_id)
     
-    responses = db.query(Response).filter(Response.experiment_id == experiment_id).all()
+    responses = ResponseRepository.get_by_experiment_id(db, experiment_id)
     
     # Create CSV in memory
     output = io.StringIO()
@@ -41,7 +43,8 @@ async def export_experiment_csv(
     
     # Write data rows
     for response in responses:
-        metrics = {m.name: m.value for m in db.query(Metric).filter(Metric.response_id == response.id).all()}
+        metrics = MetricRepository.get_by_response_id(db, response.id)
+        metrics_dict = {m.name: m.value for m in metrics}
         
         writer.writerow([
             response.id,
@@ -50,12 +53,12 @@ async def export_experiment_csv(
             response.max_tokens,
             response.text.replace('\n', ' ').replace('\r', ' '),  # Clean newlines
             response.finish_reason or "",
-            metrics.get("length_score", ""),
-            metrics.get("coherence_score", ""),
-            metrics.get("completeness_score", ""),
-            metrics.get("structure_score", ""),
-            metrics.get("readability_score", ""),
-            metrics.get("overall_score", "")
+            metrics_dict.get("length_score", ""),
+            metrics_dict.get("coherence_score", ""),
+            metrics_dict.get("completeness_score", ""),
+            metrics_dict.get("structure_score", ""),
+            metrics_dict.get("readability_score", ""),
+            metrics_dict.get("overall_score", "")
         ])
     
     output.seek(0)
@@ -75,11 +78,11 @@ async def export_experiment_json(
     db: Session = Depends(get_db)
 ):
     """Export experiment data as JSON"""
-    experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
+    experiment = ExperimentRepository.get_by_id(db, experiment_id)
     if not experiment:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise_experiment_not_found(experiment_id)
     
-    responses = db.query(Response).filter(Response.experiment_id == experiment_id).all()
+    responses = ResponseRepository.get_by_experiment_id(db, experiment_id)
     
     # Build JSON structure
     data = {
@@ -93,7 +96,7 @@ async def export_experiment_json(
     }
     
     for response in responses:
-        metrics = db.query(Metric).filter(Metric.response_id == response.id).all()
+        metrics = MetricRepository.get_by_response_id(db, response.id)
         metrics_dict = {
             m.name: {
                 "value": m.value,
