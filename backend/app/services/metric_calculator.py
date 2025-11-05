@@ -1,13 +1,13 @@
 """
-Quality Metrics Service - Calculates quality metrics for LLM responses
+Metric Calculator - Calculates quality metrics for LLM responses from text
 """
 import re
 import math
 from typing import Dict
 
 
-class MetricsService:
-    """Service for calculating response quality metrics"""
+class MetricCalculator:
+    """Service for calculating response quality metrics from text"""
     
     def calculate_all_metrics(self, text: str) -> Dict[str, Dict]:
         """

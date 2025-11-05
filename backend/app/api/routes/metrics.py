@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.repositories.experiment_repository import ExperimentRepository
-from app.services.metrics_service import MetricsAggregationService
+from app.services.metrics_aggregation_service import MetricsAggregationService
 from app.core.exceptions import raise_experiment_not_found
 
 router = APIRouter()

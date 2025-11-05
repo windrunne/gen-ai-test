@@ -1,5 +1,5 @@
 """
-Metrics service - Business logic for metrics aggregation
+Metrics Aggregation Service - Aggregates stored metrics from database
 """
 import statistics
 from sqlalchemy.orm import Session
@@ -9,7 +9,7 @@ from app.repositories.metric_repository import MetricRepository
 
 
 class MetricsAggregationService:
-    """Service for metrics aggregation and summary"""
+    """Service for aggregating stored metrics and calculating summary statistics"""
     
     @staticmethod
     def get_experiment_metrics_summary(db: Session, experiment_id: int) -> Dict[str, dict]:

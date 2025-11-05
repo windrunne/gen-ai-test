@@ -10,7 +10,7 @@ from app.repositories.experiment_repository import ExperimentRepository
 from app.repositories.response_repository import ResponseRepository
 from app.repositories.metric_repository import MetricRepository
 from app.services.llm_service import LLMService
-from app.services.quality_metrics_service import MetricsService
+from app.services.metric_calculator import MetricCalculator
 from app.services.response_validator import ResponseValidator
 from app.schemas.experiment import ExperimentCreate
 from app.core.constants import DEFAULT_BATCH_SIZE
@@ -23,7 +23,7 @@ class ExperimentService:
     
     def __init__(self):
         self.llm_service = LLMService()
-        self.metrics_service = MetricsService()
+        self.metric_calculator = MetricCalculator()
         self.validator = ResponseValidator()
     
     async def create_experiment(
@@ -168,7 +168,7 @@ class ExperimentService:
             response_text = validation.get("cleaned_text") or llm_response["text"]
             
             # Calculate metrics
-            metrics = self.metrics_service.calculate_all_metrics(response_text)
+            metrics = self.metric_calculator.calculate_all_metrics(response_text)
             print(f"[EXPERIMENT {experiment_id}] Metrics calculated for response {idx}: {list(metrics.keys())}")
             
             # Save to database with new session (thread-safe)
