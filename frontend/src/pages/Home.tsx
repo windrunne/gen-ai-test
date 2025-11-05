@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, Loader2 } from 'lucide-react'
 import { experimentsApi, ExperimentCreate } from '../api/experiments'
+import ParameterModal from '../components/ParameterModal'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -26,18 +27,16 @@ export default function Home() {
     createExperiment.mutate(formData)
   }
 
-  const addTempValue = () => {
-    const newValue = parseFloat(
-      prompt(`Enter temperature value (0.0 - 2.0):`) || '0'
-    )
-    if (!isNaN(newValue) && newValue >= 0 && newValue <= 2) {
-      setFormData({
-        ...formData,
-        temperature_range: [...formData.temperature_range, newValue].sort(
-          (a, b) => a - b
-        ),
-      })
-    }
+  const [showTempModal, setShowTempModal] = useState(false)
+  const [showTopPModal, setShowTopPModal] = useState(false)
+
+  const addTempValue = (value: number) => {
+    setFormData({
+      ...formData,
+      temperature_range: [...formData.temperature_range, value].sort(
+        (a, b) => a - b
+      ),
+    })
   }
 
   const removeTempValue = (index: number) => {
@@ -47,14 +46,11 @@ export default function Home() {
     })
   }
 
-  const addTopPValue = () => {
-    const newValue = parseFloat(prompt(`Enter top_p value (0.0 - 1.0):`) || '0')
-    if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
-      setFormData({
-        ...formData,
-        top_p_range: [...formData.top_p_range, newValue].sort((a, b) => a - b),
-      })
-    }
+  const addTopPValue = (value: number) => {
+    setFormData({
+      ...formData,
+      top_p_range: [...formData.top_p_range, value].sort((a, b) => a - b),
+    })
   }
 
   const removeTopPValue = (index: number) => {
@@ -146,7 +142,7 @@ export default function Home() {
             </div>
             <button
               type="button"
-              onClick={addTempValue}
+              onClick={() => setShowTempModal(true)}
               className="btn-secondary text-sm"
             >
               + Add Temperature Value
@@ -180,7 +176,7 @@ export default function Home() {
             </div>
             <button
               type="button"
-              onClick={addTopPValue}
+              onClick={() => setShowTopPModal(true)}
               className="btn-secondary text-sm"
             >
               + Add Top P Value
